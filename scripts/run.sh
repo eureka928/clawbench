@@ -55,8 +55,9 @@ fi
 # Copy USER.md
 cp fixtures/inbox_triage/USER.md workspace/USER.md
 
-# Get token from .env or use default
+# Get token and port from .env or use defaults
 TOKEN="${OPENCLAW_GATEWAY_TOKEN:-sandbox-token-12345}"
+PORT="${OPENCLAW_PORT:-18790}"
 
 echo ""
 echo "=============================================="
@@ -65,7 +66,7 @@ echo "=============================================="
 echo ""
 echo "AGENTS.md variant: $VARIANT"
 echo ""
-echo "Dashboard: http://localhost:18789/?token=${TOKEN}"
+echo "Dashboard: http://localhost:${PORT}/?token=${TOKEN}"
 echo "Mock tools: http://localhost:3001"
 echo ""
 echo "Press Ctrl+C to stop"

@@ -32,7 +32,7 @@ services:
     networks:
       - sandbox-net
     healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:3001/health"]
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:3001/health')"]
       interval: 10s
       timeout: 5s
       retries: 3
@@ -46,7 +46,7 @@ services:
       context: ../openclaw
       dockerfile: Dockerfile.trajectory-sandbox
     ports:
-      - "18789:18789"
+      - "${OPENCLAW_PORT:-18790}:18789"
     volumes:
       # Workspace with AGENTS.md
       - ./workspace:/workspace
