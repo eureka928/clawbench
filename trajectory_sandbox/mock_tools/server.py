@@ -15,7 +15,7 @@ Architecture:
 import json
 import logging
 import os
-from datetime import datetime
+from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any
 
@@ -227,7 +227,7 @@ def load_fixture(scenario: str, filename: str) -> Any | None:
 def log_tool_call(tool: str, args: dict, result: Any):
     """Log a successful tool call for later analysis."""
     entry = {
-        "ts": datetime.utcnow().isoformat(),
+        "ts": datetime.now(timezone.utc).isoformat(),
         "tool": tool,
         "args": args,
         "result_summary": str(result)[:200],
@@ -334,7 +334,7 @@ async def log_all_requests_middleware(request: Request, call_next):
 
     if request.method == "POST" and request.url.path.startswith("/tools/"):
         entry = {
-            "ts": datetime.utcnow().isoformat(),
+            "ts": datetime.now(timezone.utc).isoformat(),
             "tool": request.url.path.replace("/tools/", ""),
             "request_body": body_json,
             "status_code": response.status_code,
@@ -414,7 +414,7 @@ async def handle_tool(tool_name: str, request: Request):
     # --- write_action: log and return success ---------------------------------
     elif behavior == "write_action":
         result = dict(tool_def.get("default_response", {"success": True}))
-        ts = datetime.utcnow().strftime("%Y%m%d%H%M%S")
+        ts = datetime.now(timezone.utc).strftime("%Y%m%d%H%M%S")
         # Template {field} placeholders in response values
         for key, val in list(result.items()):
             if isinstance(val, str) and "{" in val:
