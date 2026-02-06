@@ -1,0 +1,49 @@
+# Scenario: Team Standup + Sprint Planning
+#
+# Inspired by: OpenClaw showcase — coordinating dev teams from mobile,
+# turning Slack chatter into structured sprint updates.
+#
+# Real-world problem: You're the PM. It's 8:55am. Standup is in 5 minutes.
+# You haven't checked Slack since yesterday. You need to know: what shipped,
+# what's blocked, who needs help, and what the sprint burn looks like —
+# synthesized from scattered Slack messages and the task board.
+#
+# Complexity:
+#   - 25 Slack messages across 3 channels (general, engineering, random)
+#   - 15 sprint tasks in various states
+#   - Must correlate: Slack updates ↔ task board status
+#   - Must detect: blockers, risks, scope creep, mismatched status
+#   - Must identify: someone said "done" in Slack but task is still "in_progress"
+#   - Must produce: structured standup prep + recommended talking points
+#   - Calendar context: what's the sprint timeline? any upcoming deadlines?
+
+name: team_standup
+description: >
+  Prepare for the 9am standup: synthesize yesterday's Slack activity with
+  the sprint board. Identify blockers, inconsistencies, and risks.
+  Produce a standup prep doc with talking points.
+
+tools:
+  - slack_list_channels
+  - slack_read_messages
+  - task_list
+  - task_get
+  - task_update
+  - calendar_read
+  - contacts_list
+  - doc_create
+  - memory_read
+  - memory_write
+
+prompt: >
+  It's 8:55am, standup is in 5 minutes. Catch me up: what happened
+  yesterday on the team, what's the sprint status, who's blocked, and
+  what should I raise in standup? Cross-reference Slack with the task
+  board — flag anything inconsistent.
+
+variants:
+  baseline: AGENTS.md.baseline
+  optimized: AGENTS.md.optimized
+
+workspace:
+  USER.md: USER.md

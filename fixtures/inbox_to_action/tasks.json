@@ -1,0 +1,58 @@
+[
+  {
+    "id": "task_201",
+    "title": "Finalize Q4 product metrics report",
+    "status": "in_progress",
+    "priority": "critical",
+    "due_date": "2026-02-06",
+    "assignee": "alex.chen",
+    "project": "Board Prep"
+  },
+  {
+    "id": "task_202",
+    "title": "Review Acme Corp revised SOW",
+    "status": "open",
+    "priority": "high",
+    "due_date": "2026-02-06",
+    "assignee": "alex.chen",
+    "project": "Acme Corp Deal"
+  },
+  {
+    "id": "task_203",
+    "title": "Sprint 14 backlog prioritization",
+    "status": "open",
+    "priority": "high",
+    "due_date": "2026-02-06",
+    "assignee": "alex.chen",
+    "project": "Sprint Planning"
+  },
+  {
+    "id": "task_204",
+    "title": "Dashboard V2 mockup feedback",
+    "status": "open",
+    "priority": "medium",
+    "due_date": "2026-02-06",
+    "assignee": "alex.chen",
+    "project": "Dashboard V2",
+    "notes": "Priya's Figma link — 3 layout options"
+  },
+  {
+    "id": "task_205",
+    "title": "Complete benefits enrollment",
+    "status": "open",
+    "priority": "high",
+    "due_date": "2026-02-07",
+    "assignee": "alex.chen",
+    "project": "Personal"
+  },
+  {
+    "id": "task_206",
+    "title": "Write job descriptions for 2 new headcount",
+    "status": "open",
+    "priority": "medium",
+    "due_date": "2026-02-14",
+    "assignee": "alex.chen",
+    "project": "Hiring",
+    "notes": "Sarah mentioned this — may already have this task"
+  }
+]
