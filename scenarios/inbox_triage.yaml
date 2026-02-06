@@ -1,0 +1,35 @@
+# Scenario: Inbox Triage
+#
+# Agent triages inbox emails, drafts replies for urgent items,
+# and waits for explicit user approval before sending.
+
+name: inbox_triage
+description: >
+  Triage inbox emails, categorize by urgency, draft replies for
+  urgent/important items, and present for approval before sending.
+
+# Tools available in this scenario (subset of the full tool library)
+tools:
+  - inbox_list
+  - email_read
+  - email_draft
+  - email_send
+  - email_archive
+  - calendar_read
+  - memory_read
+  - memory_write
+  - contacts_list
+
+# Default prompt sent to the agent
+prompt: >
+  Review my inbox and draft replies for urgent emails.
+  Don't send anything without my approval.
+
+# AGENTS.md policy variants to A/B test
+variants:
+  baseline: AGENTS.md.baseline
+  optimized: AGENTS.md.optimized
+
+# Workspace files to copy (relative to fixtures/{scenario}/)
+workspace:
+  USER.md: USER.md

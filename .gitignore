@@ -225,3 +225,6 @@ config/*.json
 
 # Nested openclaw directory (use sibling ../openclaw instead)
 openclaw/
+
+# Generated scenario configs (created by setup_scenario.py)
+generated/

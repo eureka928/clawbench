@@ -2,11 +2,16 @@
 # Run Trajectory Sandbox
 #
 # Usage:
-#   ./scripts/run.sh [baseline|optimized]
+#   ./scripts/run.sh <scenario> [variant]
+#
+#   ./scripts/run.sh inbox_triage baseline
+#   ./scripts/run.sh inbox_triage optimized
+#   ./scripts/run.sh --list                  # list available scenarios
 #
 # Prerequisites:
 #   1. cp .env.example .env
 #   2. Edit .env with your API key
+#   3. pip install pyyaml  (for setup_scenario.py)
 
 set -e
 
@@ -14,6 +19,12 @@ SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 SANDBOX_DIR="$(dirname "$SCRIPT_DIR")"
 
 cd "$SANDBOX_DIR"
+
+# Handle --list flag
+if [ "$1" == "--list" ] || [ "$1" == "-l" ]; then
+    python scripts/setup_scenario.py --list
+    exit 0
+fi
 
 # Check for .env file
 if [ ! -f ".env" ]; then
@@ -38,22 +49,13 @@ if [ -z "$ANTHROPIC_API_KEY" ] && [ -z "$OPENAI_API_KEY" ]; then
     exit 1
 fi
 
-# Copy AGENTS.md variant
-VARIANT="${1:-baseline}"
-if [ "$VARIANT" == "baseline" ]; then
-    echo "Using AGENTS.md.baseline"
-    cp fixtures/inbox_triage/AGENTS.md.baseline workspace/AGENTS.md
-elif [ "$VARIANT" == "optimized" ]; then
-    echo "Using AGENTS.md.optimized"
-    cp fixtures/inbox_triage/AGENTS.md.optimized workspace/AGENTS.md
-else
-    echo "Unknown variant: $VARIANT"
-    echo "Usage: ./scripts/run.sh [baseline|optimized]"
-    exit 1
-fi
+# Parse arguments
+SCENARIO="${1:-inbox_triage}"
+VARIANT="${2:-baseline}"
 
-# Copy USER.md
-cp fixtures/inbox_triage/USER.md workspace/USER.md
+# Setup scenario (generates openclaw.json, copies workspace files)
+echo ""
+python scripts/setup_scenario.py "$SCENARIO" "$VARIANT"
 
 # Get token and port from .env or use defaults
 TOKEN="${OPENCLAW_GATEWAY_TOKEN:-sandbox-token-12345}"
@@ -64,7 +66,8 @@ echo "=============================================="
 echo "Starting Trajectory Sandbox"
 echo "=============================================="
 echo ""
-echo "AGENTS.md variant: $VARIANT"
+echo "Scenario: $SCENARIO"
+echo "Variant:  $VARIANT"
 echo ""
 echo "Dashboard: http://localhost:${PORT}/?token=${TOKEN}"
 echo "Mock tools: http://localhost:3001"
@@ -72,5 +75,5 @@ echo ""
 echo "Press Ctrl+C to stop"
 echo ""
 
-# Build and run
+# Build and run — use generated scenario env alongside .env
 docker compose up --build

@@ -1,8 +1,8 @@
 {
   "id": "trajectory-sandbox-tools",
   "name": "Trajectory Sandbox Tools",
-  "version": "0.1.0",
-  "description": "Mock tools for trajectory sandbox evaluation (inbox, email, calendar, memory)",
+  "version": "0.2.0",
+  "description": "Comprehensive mock tool library for trajectory sandbox evaluation — 25 tools across email, calendar, Slack, tasks, documents, contacts, memory, and web search",
   "configSchema": {
     "type": "object",
     "additionalProperties": false,
