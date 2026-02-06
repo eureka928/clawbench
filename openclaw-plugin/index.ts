@@ -77,37 +77,37 @@ const trajectorySandboxPlugin = {
 
     /**
      * Helper: extract params defensively from whatever OpenClaw passes to execute().
-     * OpenClaw may pass (args) directly, or wrap them — this handles both.
+     *
+     * Discovered calling convention (2026-02-06):
+     *   execute(toolCallId: string, params: object, context: object, unknown)
+     *
+     * So args[0] is the tool call ID (string), args[1] is the actual params object.
      */
     function extractParams(...args: unknown[]): Record<string, unknown> {
       api.logger.info(`[params-debug] execute() called with ${args.length} arg(s): ${JSON.stringify(args).slice(0, 500)}`);
 
       if (args.length === 0) return {};
 
+      // OpenClaw convention: execute(toolCallId, params, context, ?)
+      // args[0] is the tool call ID (string), args[1] is the params object
+      if (typeof args[0] === 'string' && args.length >= 2) {
+        api.logger.info(`[params-debug] args[0] is toolCallId="${(args[0] as string).slice(0, 30)}", using args[1] as params`);
+        const params = args[1];
+        if (params !== null && params !== undefined && typeof params === 'object' && !Array.isArray(params)) {
+          return params as Record<string, unknown>;
+        }
+        return {};
+      }
+
+      // Fallback: if args[0] is already an object, use it directly
       const first = args[0];
       if (first === null || first === undefined) return {};
 
-      // If it's already a plain object, use it directly
       if (typeof first === 'object' && !Array.isArray(first)) {
-        const obj = first as Record<string, unknown>;
-        // Check if params are nested under a known key (e.g. args, input, params)
-        if ('args' in obj && typeof obj.args === 'object' && obj.args !== null) {
-          api.logger.info(`[params-debug] unwrapping .args`);
-          return obj.args as Record<string, unknown>;
-        }
-        if ('input' in obj && typeof obj.input === 'object' && obj.input !== null) {
-          api.logger.info(`[params-debug] unwrapping .input`);
-          return obj.input as Record<string, unknown>;
-        }
-        if ('params' in obj && typeof obj.params === 'object' && obj.params !== null) {
-          api.logger.info(`[params-debug] unwrapping .params`);
-          return obj.params as Record<string, unknown>;
-        }
-        return obj;
+        return first as Record<string, unknown>;
       }
 
-      // Fallback: stringify and log for investigation
-      api.logger.warn(`[params-debug] unexpected param type: ${typeof first}`);
+      api.logger.warn(`[params-debug] unexpected args shape — returning empty`);
       return {};
     }
 
