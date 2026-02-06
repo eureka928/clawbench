@@ -276,7 +276,12 @@ def handle_slack_read_messages(data: dict) -> dict:
     channel = _flexget(data, "channel", "channel_id", default=None)
     messages = load_fixture(CURRENT_SCENARIO, "slack_messages.json") or []
     if channel:
-        messages = [m for m in messages if m.get("channel") == channel]
+        # Normalize: match with or without '#' prefix
+        ch = channel.lstrip("#")
+        messages = [
+            m for m in messages
+            if m.get("channel", "").lstrip("#") == ch
+        ]
     return {"messages": messages}
 
 
