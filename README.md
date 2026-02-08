@@ -2,11 +2,9 @@
 
 > Deterministic, scenario-based evaluation for [OpenClaw](https://github.com/openclaw/openclaw) agents. Catch bad tool-use decisions before production.
 
-<!-- Uncomment when published:
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
 [![Python 3.11+](https://img.shields.io/badge/python-3.11+-blue.svg)](https://www.python.org/downloads/)
 [![OpenClaw Compatible](https://img.shields.io/badge/OpenClaw-v0.3+-green.svg)](https://github.com/openclaw/openclaw)
--->
 
 Your agent sent an email it shouldn't have. It leaked confidential data in a summary. It created duplicate tasks. **You found out in production.**
 

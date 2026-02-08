@@ -1,8 +1,24 @@
 [project]
 name = "trajectory-sandbox"
 version = "0.1.0"
-description = "Sandbox for evaluating AGENTS.md policies with OpenClaw"
+description = "Deterministic, scenario-based evaluation for OpenClaw agents"
+readme = "README.md"
+license = "MIT"
 requires-python = ">=3.11"
+authors = [
+    { name = "TrajectoryRL" },
+]
+keywords = ["openclaw", "agent", "evaluation", "testing", "trajectory", "sandbox", "llm"]
+classifiers = [
+    "Development Status :: 4 - Beta",
+    "Intended Audience :: Developers",
+    "License :: OSI Approved :: MIT License",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Topic :: Software Development :: Testing",
+    "Topic :: Scientific/Engineering :: Artificial Intelligence",
+]
 dependencies = [
     "httpx>=0.27",
     "pydantic>=2.0",
@@ -15,6 +31,11 @@ dependencies = [
 
 [project.optional-dependencies]
 dev = ["pytest", "pytest-asyncio", "ruff"]
+
+[project.urls]
+Homepage = "https://github.com/trajectoryRL/trajectory-sandbox"
+Repository = "https://github.com/trajectoryRL/trajectory-sandbox"
+Issues = "https://github.com/trajectoryRL/trajectory-sandbox/issues"
 
 [project.scripts]
 sandbox = "trajectory_sandbox.cli:app"
