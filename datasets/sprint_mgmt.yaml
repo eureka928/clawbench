@@ -1,0 +1,5 @@
+name: sprint_mgmt
+description: Sprint lifecycle scenarios
+scenarios:
+  - team_standup
+  - sprint_retro

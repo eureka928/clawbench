@@ -1,0 +1,6 @@
+name: daily_ops
+description: Email and daily workflow scenarios
+scenarios:
+  - inbox_triage
+  - inbox_to_action
+  - morning_brief

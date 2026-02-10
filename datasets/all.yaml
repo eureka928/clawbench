@@ -1,0 +1,13 @@
+name: all
+description: Complete benchmark — all 10 scenarios
+scenarios:
+  - client_escalation
+  - inbox_to_action
+  - inbox_triage
+  - morning_brief
+  - team_standup
+  - sprint_retro
+  - project_handoff
+  - incident_postmortem
+  - vendor_evaluation
+  - launch_coordination

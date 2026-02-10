@@ -1,0 +1,5 @@
+name: crisis
+description: Urgent response and crisis management scenarios
+scenarios:
+  - client_escalation
+  - incident_postmortem

@@ -1,0 +1,6 @@
+name: stakeholder
+description: Multi-stakeholder synthesis scenarios
+scenarios:
+  - project_handoff
+  - vendor_evaluation
+  - launch_coordination
