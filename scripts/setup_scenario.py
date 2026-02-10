@@ -128,7 +128,7 @@ def generate_openclaw_config(scenario: dict) -> dict:
     return config
 
 
-def setup_workspace(scenario: dict, variant: str):
+def setup_workspace(scenario: dict, variant: str, agents_md_override: str = None):
     """Copy AGENTS.md variant and workspace files into the workspace directory."""
     scenario_name = scenario["name"]
     fixture_dir = FIXTURES_DIR / scenario_name
@@ -136,20 +136,30 @@ def setup_workspace(scenario: dict, variant: str):
     # Ensure workspace exists
     WORKSPACE_DIR.mkdir(parents=True, exist_ok=True)
 
-    # Copy AGENTS.md variant
-    variants = scenario.get("variants", {})
-    if variant not in variants:
-        print(f"ERROR: Unknown variant '{variant}'")
-        print(f"Available variants: {list(variants.keys())}")
-        sys.exit(1)
+    # Copy AGENTS.md — either from override path or variant lookup
+    if agents_md_override:
+        agents_src = Path(agents_md_override)
+        if not agents_src.is_absolute():
+            agents_src = SANDBOX_DIR / agents_src
+        if not agents_src.exists():
+            print(f"ERROR: AGENTS.md override not found: {agents_src}")
+            sys.exit(1)
+        shutil.copy2(agents_src, WORKSPACE_DIR / "AGENTS.md")
+        print(f"  Copied {agents_src} -> workspace/AGENTS.md (override)")
+    else:
+        variants = scenario.get("variants", {})
+        if variant not in variants:
+            print(f"ERROR: Unknown variant '{variant}'")
+            print(f"Available variants: {list(variants.keys())}")
+            sys.exit(1)
 
-    agents_src = fixture_dir / variants[variant]
-    if not agents_src.exists():
-        print(f"ERROR: AGENTS.md variant not found: {agents_src}")
-        sys.exit(1)
+        agents_src = fixture_dir / variants[variant]
+        if not agents_src.exists():
+            print(f"ERROR: AGENTS.md variant not found: {agents_src}")
+            sys.exit(1)
 
-    shutil.copy2(agents_src, WORKSPACE_DIR / "AGENTS.md")
-    print(f"  Copied {agents_src.name} -> workspace/AGENTS.md")
+        shutil.copy2(agents_src, WORKSPACE_DIR / "AGENTS.md")
+        print(f"  Copied {agents_src.name} -> workspace/AGENTS.md")
 
     # Copy workspace files
     for dest_name, src_name in scenario.get("workspace", {}).items():
@@ -167,6 +177,8 @@ def main():
     parser.add_argument("variant", nargs="?", default="baseline", help="AGENTS.md variant (default: baseline)")
     parser.add_argument("--scenario", "-s", dest="scenario_flag", help="Scenario name (alternative)")
     parser.add_argument("--variant", "-v", dest="variant_flag", help="Variant name (alternative)")
+    parser.add_argument("--agents-md", type=str,
+                        help="Override: use this AGENTS.md file instead of variant lookup")
     parser.add_argument("--list", "-l", action="store_true", help="List available scenarios")
 
     args = parser.parse_args()
@@ -189,7 +201,18 @@ def main():
         parser.print_help()
         sys.exit(1)
 
-    print(f"Setting up scenario: {scenario_name} (variant: {variant})")
+    # When --agents-md is used, variant label is derived from filename
+    agents_md_override = args.agents_md
+    if agents_md_override:
+        # Extract variant from filename like "AGENTS.md.general_miner" → "general_miner"
+        fname = Path(agents_md_override).name
+        variant_label = fname.replace("AGENTS.md.", "").replace("AGENTS.md", "").strip(".")
+        if not variant_label:
+            variant_label = "override"
+        print(f"Setting up scenario: {scenario_name} (agents-md: {agents_md_override})")
+    else:
+        variant_label = variant
+        print(f"Setting up scenario: {scenario_name} (variant: {variant})")
 
     # Load scenario
     scenario = load_scenario(scenario_name)
@@ -204,7 +227,7 @@ def main():
     print(f"  Tools allowed: {config['tools']['allow']}")
 
     # Setup workspace
-    setup_workspace(scenario, variant)
+    setup_workspace(scenario, variant, agents_md_override=agents_md_override)
 
     # Write scenario env for docker-compose
     env_path = GENERATED_DIR / ".env.scenario"
@@ -212,7 +235,7 @@ def main():
         f.write(f"SCENARIO={scenario_name}\n")
     print(f"  Generated {env_path}")
 
-    print(f"\nScenario '{scenario_name}' ready (variant: {variant})")
+    print(f"\nScenario '{scenario_name}' ready (variant: {variant_label})")
 
 
 if __name__ == "__main__":

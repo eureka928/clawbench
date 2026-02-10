@@ -58,6 +58,7 @@ FIXTURES_DIR = SANDBOX_DIR / "fixtures"
 WORKSPACE_DIR = SANDBOX_DIR / "workspace"
 GENERATED_DIR = SANDBOX_DIR / "generated"
 RESULTS_DIR = SANDBOX_DIR / "results"
+DATASETS_DIR = SANDBOX_DIR / "datasets"
 
 # ---------------------------------------------------------------------------
 # Config
@@ -202,25 +203,61 @@ def load_all_scenarios() -> list[dict]:
     return scenarios
 
 
-def setup_workspace(scenario: dict, variant: str) -> bool:
+def load_dataset(name: str) -> list[str]:
+    """Load a dataset YAML and return the list of scenario names."""
+    path = DATASETS_DIR / f"{name}.yaml"
+    if not path.exists():
+        # Try with .yaml already included
+        path = DATASETS_DIR / name
+    if not path.exists():
+        print(f"ERROR: Dataset not found: {path}")
+        available = sorted(p.stem for p in DATASETS_DIR.glob("*.yaml")) if DATASETS_DIR.exists() else []
+        print(f"Available datasets: {available}")
+        sys.exit(1)
+
+    with open(path) as f:
+        data = yaml.safe_load(f)
+
+    scenario_names = data.get("scenarios", [])
+
+    # Validate all listed scenarios exist
+    available_scenarios = {p.stem for p in SCENARIOS_DIR.glob("*.yaml")}
+    missing = [s for s in scenario_names if s not in available_scenarios]
+    if missing:
+        print(f"ERROR: Dataset '{name}' references missing scenarios: {missing}")
+        sys.exit(1)
+
+    return scenario_names
+
+
+def setup_workspace(scenario: dict, variant: str, agents_md_override: str = None) -> bool:
     """Copy AGENTS.md variant and workspace files for a scenario."""
     name = scenario["name"]
     fixture_dir = FIXTURES_DIR / name
-    variants = scenario.get("variants", {})
-
-    if variant not in variants:
-        print(f"  WARNING: variant '{variant}' not found in {name}")
-        return False
 
     WORKSPACE_DIR.mkdir(parents=True, exist_ok=True)
 
-    # Copy AGENTS.md variant
-    src = fixture_dir / variants[variant]
-    if src.exists():
-        shutil.copy2(src, WORKSPACE_DIR / "AGENTS.md")
+    # Copy AGENTS.md — either from override path or variant lookup
+    if agents_md_override:
+        src = Path(agents_md_override)
+        if not src.is_absolute():
+            src = SANDBOX_DIR / src
+        if src.exists():
+            shutil.copy2(src, WORKSPACE_DIR / "AGENTS.md")
+        else:
+            print(f"  WARNING: AGENTS.md override not found: {src}")
+            return False
     else:
-        print(f"  WARNING: {src} not found")
-        return False
+        variants = scenario.get("variants", {})
+        if variant not in variants:
+            print(f"  WARNING: variant '{variant}' not found in {name}")
+            return False
+        src = fixture_dir / variants[variant]
+        if src.exists():
+            shutil.copy2(src, WORKSPACE_DIR / "AGENTS.md")
+        else:
+            print(f"  WARNING: {src} not found")
+            return False
 
     # Copy workspace files
     for dest_name, src_name in scenario.get("workspace", {}).items():
@@ -285,7 +322,7 @@ def get_all_requests() -> dict:
 # ---------------------------------------------------------------------------
 # Dry-run: verify fixtures without API calls
 # ---------------------------------------------------------------------------
-def dry_run_scenario(scenario: dict, variant: str) -> dict:
+def dry_run_scenario(scenario: dict, variant: str, agents_md_override: str = None) -> dict:
     """Verify fixtures load correctly without calling the LLM."""
     name = scenario["name"]
     fixture_dir = FIXTURES_DIR / name
@@ -301,18 +338,28 @@ def dry_run_scenario(scenario: dict, variant: str) -> dict:
         "fixtures_missing": [],
     }
 
-    # Check variant file exists
-    if variant not in variants:
-        result["status"] = "error"
-        result["issues"].append(f"Variant '{variant}' not defined in scenario YAML")
-        return result
-
-    agents_file = fixture_dir / variants[variant]
-    if agents_file.exists():
-        result["fixtures_found"].append(str(variants[variant]))
+    # Check AGENTS.md source exists
+    if agents_md_override:
+        override_path = Path(agents_md_override)
+        if not override_path.is_absolute():
+            override_path = SANDBOX_DIR / override_path
+        if override_path.exists():
+            result["fixtures_found"].append(f"{agents_md_override} (override)")
+        else:
+            result["status"] = "error"
+            result["issues"].append(f"AGENTS.md override not found: {override_path}")
     else:
-        result["status"] = "error"
-        result["issues"].append(f"AGENTS.md variant not found: {agents_file}")
+        if variant not in variants:
+            result["status"] = "error"
+            result["issues"].append(f"Variant '{variant}' not defined in scenario YAML")
+            return result
+
+        agents_file = fixture_dir / variants[variant]
+        if agents_file.exists():
+            result["fixtures_found"].append(str(variants[variant]))
+        else:
+            result["status"] = "error"
+            result["issues"].append(f"AGENTS.md variant not found: {agents_file}")
 
     # Check workspace files
     for dest, src in scenario.get("workspace", {}).items():
@@ -368,7 +415,7 @@ def dry_run_scenario(scenario: dict, variant: str) -> dict:
 # ---------------------------------------------------------------------------
 # Run a single episode
 # ---------------------------------------------------------------------------
-def run_single(scenario: dict, variant: str) -> dict:
+def run_single(scenario: dict, variant: str, agents_md_override: str = None) -> dict:
     """Run one scenario × variant and return structured results."""
     name = scenario["name"]
     prompt = scenario.get("prompt", "Help me with my tasks.").strip()
@@ -380,7 +427,7 @@ def run_single(scenario: dict, variant: str) -> dict:
     print(f"{'='*60}")
 
     # Setup
-    if not setup_workspace(scenario, variant):
+    if not setup_workspace(scenario, variant, agents_md_override=agents_md_override):
         return {"scenario": name, "variant": variant, "status": "error", "error": "workspace setup failed"}
 
     if not reset_mock_scenario(name):
@@ -532,53 +579,62 @@ def save_results(results: list[dict], run_id: str):
                     f"{s['tool_calls']} | {s['failed_requests']} | "
                     f"{s['response_length']} | {s['elapsed_seconds']} |\n")
 
-        # Comparison: baseline vs optimized per scenario
-        f.write("\n## Baseline vs Optimized Comparison\n\n")
+        # Comparison: pairwise variant comparison per scenario
         scenarios_seen = {}
         for s in all_summaries:
             scenarios_seen.setdefault(s["scenario"], {})[s["variant"]] = s
 
-        for scenario_name, variants in scenarios_seen.items():
-            baseline = variants.get("baseline")
-            optimized = variants.get("optimized")
-            if baseline and optimized:
+        # Only show comparison if there are multiple variants for any scenario
+        has_comparisons = any(len(v) >= 2 for v in scenarios_seen.values())
+        if has_comparisons:
+            f.write("\n## Variant Comparison\n\n")
+
+            for scenario_name, variants in scenarios_seen.items():
+                variant_names = sorted(variants.keys())
+                if len(variant_names) < 2:
+                    continue
+
+                # Compare first two variants (typically baseline vs other)
+                v1_name, v2_name = variant_names[0], variant_names[1]
+                v1, v2 = variants[v1_name], variants[v2_name]
+
                 f.write(f"### {scenario_name}\n\n")
-                f.write(f"| Metric | Baseline | Optimized | Delta |\n")
+                f.write(f"| Metric | {v1_name} | {v2_name} | Delta |\n")
                 f.write(f"|--------|----------|-----------|-------|\n")
 
-                tc_b, tc_o = baseline["tool_calls"], optimized["tool_calls"]
-                f.write(f"| Tool calls | {tc_b} | {tc_o} | {tc_o - tc_b:+d} |\n")
+                tc_1, tc_2 = v1["tool_calls"], v2["tool_calls"]
+                f.write(f"| Tool calls | {tc_1} | {tc_2} | {tc_2 - tc_1:+d} |\n")
 
-                rl_b, rl_o = baseline["response_length"], optimized["response_length"]
-                f.write(f"| Response length | {rl_b} | {rl_o} | {rl_o - rl_b:+d} |\n")
+                rl_1, rl_2 = v1["response_length"], v2["response_length"]
+                f.write(f"| Response length | {rl_1} | {rl_2} | {rl_2 - rl_1:+d} |\n")
 
-                et_b, et_o = baseline["elapsed_seconds"], optimized["elapsed_seconds"]
-                f.write(f"| Time (s) | {et_b} | {et_o} | {et_o - et_b:+.1f} |\n")
+                et_1, et_2 = v1["elapsed_seconds"], v2["elapsed_seconds"]
+                f.write(f"| Time (s) | {et_1} | {et_2} | {et_2 - et_1:+.1f} |\n")
 
-                ff_b, ff_o = baseline["failed_requests"], optimized["failed_requests"]
-                f.write(f"| Failed requests | {ff_b} | {ff_o} | {ff_o - ff_b:+d} |\n")
+                ff_1, ff_2 = v1["failed_requests"], v2["failed_requests"]
+                f.write(f"| Failed requests | {ff_1} | {ff_2} | {ff_2 - ff_1:+d} |\n")
 
                 # Score comparison
-                sc_b = baseline.get("score")
-                sc_o = optimized.get("score")
-                if sc_b is not None and sc_o is not None:
-                    f.write(f"| **Score** | **{sc_b:.0%}** | **{sc_o:.0%}** | **{sc_o - sc_b:+.0%}** |\n")
+                sc_1 = v1.get("score")
+                sc_2 = v2.get("score")
+                if sc_1 is not None and sc_2 is not None:
+                    f.write(f"| **Score** | **{sc_1:.0%}** | **{sc_2:.0%}** | **{sc_2 - sc_1:+.0%}** |\n")
 
                     # Per-category score comparison
                     f.write(f"\n**Score breakdown:**\n\n")
-                    f.write(f"| Category | Baseline | Optimized |\n")
+                    f.write(f"| Category | {v1_name} | {v2_name} |\n")
                     f.write(f"|----------|----------|----------|\n")
-                    cats_b = baseline.get("score_detail", {})
-                    cats_o = optimized.get("score_detail", {})
+                    cats_1 = v1.get("score_detail", {})
+                    cats_2 = v2.get("score_detail", {})
                     for cat in ["safety", "correctness", "efficiency", "structure"]:
-                        cb = cats_b.get(cat, {})
-                        co = cats_o.get(cat, {})
-                        b_str = f"{cb.get('earned', 0)}/{cb.get('possible', 0)}" if cb else "—"
-                        o_str = f"{co.get('earned', 0)}/{co.get('possible', 0)}" if co else "—"
-                        f.write(f"| {cat} | {b_str} | {o_str} |\n")
+                        c1 = cats_1.get(cat, {})
+                        c2 = cats_2.get(cat, {})
+                        s1 = f"{c1.get('earned', 0)}/{c1.get('possible', 0)}" if c1 else "—"
+                        s2 = f"{c2.get('earned', 0)}/{c2.get('possible', 0)}" if c2 else "—"
+                        f.write(f"| {cat} | {s1} | {s2} |\n")
 
-                f.write(f"\n**Baseline tools:** {json.dumps(baseline['tool_calls_by_type'])}\n")
-                f.write(f"**Optimized tools:** {json.dumps(optimized['tool_calls_by_type'])}\n\n")
+                f.write(f"\n**{v1_name} tools:** {json.dumps(v1['tool_calls_by_type'])}\n")
+                f.write(f"**{v2_name} tools:** {json.dumps(v2['tool_calls_by_type'])}\n\n")
 
         # Per-run file listing
         f.write("\n## Result Files\n\n")
@@ -628,6 +684,10 @@ Examples:
     parser.add_argument("--variant", type=str, help="Run only this variant (use with --only)")
     parser.add_argument("--dry-run", action="store_true", help="Verify fixtures without calling the LLM")
     parser.add_argument("--timeout", type=int, default=120, help="Service startup timeout in seconds")
+    parser.add_argument("--agents-md", type=str,
+                        help="Use this AGENTS.md for all episodes (overrides variant lookup)")
+    parser.add_argument("--dataset", type=str,
+                        help="Load scenario list from datasets/<name>.yaml")
 
     args = parser.parse_args()
 
@@ -639,6 +699,14 @@ Examples:
         print("ERROR: No scenarios found in scenarios/")
         sys.exit(1)
 
+    # Filter by dataset
+    if args.dataset:
+        dataset_scenarios = load_dataset(args.dataset)
+        scenarios = [s for s in scenarios if s["name"] in dataset_scenarios]
+        if not scenarios:
+            print(f"ERROR: No matching scenarios for dataset '{args.dataset}'")
+            sys.exit(1)
+
     # Filter if --only
     if args.only:
         scenarios = [s for s in scenarios if s["name"] == args.only]
@@ -646,14 +714,27 @@ Examples:
             print(f"ERROR: Scenario '{args.only}' not found")
             sys.exit(1)
 
+    # Resolve agents-md override
+    agents_md_override = args.agents_md
+
     # Build run plan
     plan: list[tuple[dict, str]] = []
-    for s in scenarios:
-        variants = list(s.get("variants", {}).keys())
-        if args.variant:
-            variants = [v for v in variants if v == args.variant]
-        for v in variants:
-            plan.append((s, v))
+    if agents_md_override:
+        # When --agents-md is set, use a single synthetic variant label
+        # Extract variant from filename like "AGENTS.md.general_miner" → "general_miner"
+        fname = Path(agents_md_override).name
+        variant_label = fname.replace("AGENTS.md.", "").replace("AGENTS.md", "").strip(".")
+        if not variant_label:
+            variant_label = "override"
+        for s in scenarios:
+            plan.append((s, variant_label))
+    else:
+        for s in scenarios:
+            variants = list(s.get("variants", {}).keys())
+            if args.variant:
+                variants = [v for v in variants if v == args.variant]
+            for v in variants:
+                plan.append((s, v))
 
     print(f"=== Batch Run Plan ===")
     print(f"Run ID: {run_id}")
@@ -669,7 +750,7 @@ Examples:
         print(f"\n=== Dry Run (fixture verification) ===\n")
         results = []
         for s, v in plan:
-            r = dry_run_scenario(s, v)
+            r = dry_run_scenario(s, v, agents_md_override=agents_md_override)
             results.append(r)
             icon = {"ok": "✅", "warning": "⚠️", "error": "❌"}.get(r["status"], "?")
             print(f"  {icon} {s['name']}/{v}")
@@ -733,7 +814,7 @@ Examples:
     for i, (s, v) in enumerate(plan):
         print(f"\n[{i+1}/{len(plan)}] Running {s['name']}/{v}...")
         try:
-            result = run_single(s, v)
+            result = run_single(s, v, agents_md_override=agents_md_override)
             results.append(result)
         except Exception as e:
             print(f"  ❌ Exception: {e}")
