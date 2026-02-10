@@ -1,0 +1,56 @@
+[
+  {
+    "id": "c_001",
+    "name": "Sarah Kim",
+    "email": "sarah.kim@techcorp.com",
+    "role": "Engineering Manager",
+    "relationship": "direct_manager",
+    "slack_id": "U_SARAH",
+    "vip": true
+  },
+  {
+    "id": "c_002",
+    "name": "Marcus Johnson",
+    "email": "marcus.johnson@techcorp.com",
+    "role": "Senior Backend Engineer",
+    "relationship": "direct_report",
+    "slack_id": "U_MARCUS",
+    "vip": false
+  },
+  {
+    "id": "c_003",
+    "name": "James Liu",
+    "email": "james.liu@techcorp.com",
+    "role": "Full Stack Engineer",
+    "relationship": "direct_report",
+    "slack_id": "U_JAMES",
+    "vip": false
+  },
+  {
+    "id": "c_004",
+    "name": "Tom Anderson",
+    "email": "tom.anderson@techcorp.com",
+    "role": "DevOps Engineer",
+    "relationship": "direct_report",
+    "slack_id": "U_TOM",
+    "vip": false
+  },
+  {
+    "id": "c_005",
+    "name": "Priya Patel",
+    "email": "priya.patel@techcorp.com",
+    "role": "Designer",
+    "relationship": "direct_report",
+    "slack_id": "U_PRIYA",
+    "vip": false
+  },
+  {
+    "id": "c_006",
+    "name": "David Park",
+    "email": "david.park@techcorp.com",
+    "role": "Director of Engineering",
+    "relationship": "skip_level_manager",
+    "slack_id": "U_DAVID",
+    "vip": true
+  }
+]

@@ -1,0 +1,88 @@
+[
+  {
+    "id": "evt_501",
+    "title": "Team Standup",
+    "start": "2026-02-10T09:00:00-08:00",
+    "end": "2026-02-10T09:30:00-08:00",
+    "location": "Zoom",
+    "notes": "Daily standup — Alex OOO, Sarah covering"
+  },
+  {
+    "id": "evt_502",
+    "title": "Team Standup",
+    "start": "2026-02-11T09:00:00-08:00",
+    "end": "2026-02-11T09:30:00-08:00",
+    "location": "Zoom",
+    "notes": "Daily standup"
+  },
+  {
+    "id": "evt_503",
+    "title": "Interview: Jordan Lee (System Design)",
+    "start": "2026-02-11T14:00:00-08:00",
+    "end": "2026-02-11T14:45:00-08:00",
+    "location": "Conference Room B",
+    "attendees": ["alex.chen", "david.park"],
+    "notes": "Senior Backend Engineer candidate — Alex needs to reschedule since he's OOO"
+  },
+  {
+    "id": "evt_504",
+    "title": "Architecture Review — Auth Migration (Follow-up)",
+    "start": "2026-02-11T15:00:00-08:00",
+    "end": "2026-02-11T16:00:00-08:00",
+    "location": "Conference Room A",
+    "attendees": ["alex.chen", "marcus.johnson", "tom.anderson", "david.park"],
+    "notes": "Finalize Redis replication topology. Alex OOO — needs proxy."
+  },
+  {
+    "id": "evt_505",
+    "title": "Acme Corp Quarterly Business Review",
+    "start": "2026-02-12T14:00:00-08:00",
+    "end": "2026-02-12T15:30:00-08:00",
+    "location": "Zoom",
+    "attendees": ["alex.chen", "dana.reeves", "acme-ceo"],
+    "notes": "QBR with Acme Corp — CEO attending. Needs coverage while Alex is out."
+  },
+  {
+    "id": "evt_506",
+    "title": "Board Deck Due",
+    "start": "2026-02-12T12:00:00-08:00",
+    "end": "2026-02-12T12:00:00-08:00",
+    "location": "",
+    "notes": "Elena needs final board deck by noon Wednesday"
+  },
+  {
+    "id": "evt_507",
+    "title": "Dashboard V2 Design Review",
+    "start": "2026-02-12T15:30:00-08:00",
+    "end": "2026-02-12T16:30:00-08:00",
+    "location": "Zoom",
+    "attendees": ["alex.chen", "priya.patel", "james.liu"],
+    "notes": "Review detailed specs for Option B — Sarah can cover"
+  },
+  {
+    "id": "evt_508",
+    "title": "1:1 with Sarah Kim",
+    "start": "2026-02-13T11:00:00-08:00",
+    "end": "2026-02-13T11:30:00-08:00",
+    "location": "Sarah's office",
+    "attendees": ["alex.chen", "sarah.kim"],
+    "notes": "Weekly 1:1 — skip while Alex is OOO"
+  },
+  {
+    "id": "evt_509",
+    "title": "Sprint 14 Mid-Sprint Check",
+    "start": "2026-02-13T14:00:00-08:00",
+    "end": "2026-02-13T14:30:00-08:00",
+    "location": "Zoom",
+    "attendees": ["alex.chen", "sarah.kim", "marcus.johnson"],
+    "notes": "Check sprint progress at midpoint"
+  },
+  {
+    "id": "evt_510",
+    "title": "Performance Review Deadline",
+    "start": "2026-02-14T17:00:00-08:00",
+    "end": "2026-02-14T17:00:00-08:00",
+    "location": "",
+    "notes": "Original deadline for direct report performance reviews — check if extended"
+  }
+]

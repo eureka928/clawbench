@@ -1,0 +1,46 @@
+[
+  {
+    "id": "evt_801",
+    "title": "Team Standup",
+    "start": "2026-02-10T09:00:00-08:00",
+    "end": "2026-02-10T09:30:00-08:00",
+    "location": "Zoom",
+    "notes": "Daily standup — discuss Saturday outage"
+  },
+  {
+    "id": "evt_802",
+    "title": "Incident Postmortem Review",
+    "start": "2026-02-10T11:00:00-08:00",
+    "end": "2026-02-10T12:00:00-08:00",
+    "location": "Conference Room A",
+    "attendees": ["alex.chen", "marcus.johnson", "tom.anderson", "james.liu"],
+    "notes": "Review postmortem draft before all-hands"
+  },
+  {
+    "id": "evt_803",
+    "title": "All-Hands Meeting",
+    "start": "2026-02-10T14:00:00-08:00",
+    "end": "2026-02-10T15:00:00-08:00",
+    "location": "Zoom (all company)",
+    "attendees": ["all"],
+    "notes": "Postmortem presentation — Alex presenting incident review"
+  },
+  {
+    "id": "evt_804",
+    "title": "1:1 with David Park",
+    "start": "2026-02-10T15:30:00-08:00",
+    "end": "2026-02-10T16:00:00-08:00",
+    "location": "David's office",
+    "attendees": ["alex.chen", "david.park"],
+    "notes": "Weekly 1:1 — will cover incident follow-up"
+  },
+  {
+    "id": "evt_805",
+    "title": "Sprint 14 Planning",
+    "start": "2026-02-11T10:00:00-08:00",
+    "end": "2026-02-11T11:30:00-08:00",
+    "location": "Conference Room B",
+    "attendees": ["alex.chen", "marcus.johnson", "james.liu", "tom.anderson", "priya.patel"],
+    "notes": "Sprint 14 planning — need to include incident remediation tasks"
+  }
+]

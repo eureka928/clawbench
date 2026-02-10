@@ -1,0 +1,29 @@
+[
+  {
+    "id": "msg_401",
+    "sender": "elena.rodriguez@techcorp.com",
+    "subject": "Board deck finalized — thanks for the numbers",
+    "body": "Alex, thanks for getting the product metrics in on time. The board deck is finalized and sent. Good numbers on NPS this quarter. — Elena",
+    "received_ts": "2026-02-07T10:00:00-08:00",
+    "labels": ["inbox"],
+    "is_urgent": false
+  },
+  {
+    "id": "msg_402",
+    "sender": "sarah.kim@techcorp.com",
+    "subject": "Retro prep — want your honest assessment",
+    "body": "Alex, before the retro I want your honest take: did we actually hit the sprint goal? The auth migration was supposed to be the headline deliverable and David is going to ask. Also want to discuss the incident response — Marcus was solo and that's not sustainable. See you at 4:30. — Sarah",
+    "received_ts": "2026-02-07T13:00:00-08:00",
+    "labels": ["inbox"],
+    "is_urgent": false
+  },
+  {
+    "id": "msg_403",
+    "sender": "marcus.johnson@techcorp.com",
+    "subject": "Sprint retro — my notes",
+    "body": "Alex, my retro notes:\n\nWhat went well: rate limiting shipped cleanly, error messages done, incident was resolved quickly.\n\nWhat didn't: Redis provisioning delay blocked auth testing for 3 days. I lost 6-8 hours to the production incident (unplanned). Sprint goal (auth migration) is NOT met — session management is in review but not fully validated.\n\nAction items I'd propose: (1) on-call rotation so one person doesn't absorb all incident work, (2) infrastructure decisions need faster turnaround, (3) better sprint planning buffer for unplanned work.\n\n— Marcus",
+    "received_ts": "2026-02-07T14:00:00-08:00",
+    "labels": ["inbox"],
+    "is_urgent": false
+  }
+]

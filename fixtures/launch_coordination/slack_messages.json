@@ -1,0 +1,98 @@
+[
+  {
+    "id": "sm_1001",
+    "channel": "#platform-engineering",
+    "channelId": "C_ENG",
+    "author": "james.liu",
+    "text": "P1 BUG: Dashboard V2 export drops rows on filtered datasets > 50K rows. CSV is silently incomplete. Filed as TC-990. This is a launch blocker. Working on fix now.",
+    "timestamp": "2026-02-11T09:00:00-08:00"
+  },
+  {
+    "id": "sm_1002",
+    "channel": "#platform-engineering",
+    "channelId": "C_ENG",
+    "author": "marcus.johnson",
+    "text": "Perf testing update: the 50% faster claim was only validated on 10K rows in staging. We haven't run production-scale (2M rows) benchmarks yet. Staging was tied up with incident remediation last week. Starting now but results won't be ready until Thursday.",
+    "timestamp": "2026-02-11T10:15:00-08:00"
+  },
+  {
+    "id": "sm_1003",
+    "channel": "#platform-engineering",
+    "channelId": "C_ENG",
+    "author": "priya.patel",
+    "text": "Design sign-off for Dashboard V2: approved WITH RESERVATIONS. The data table contrast ratio doesn't meet WCAG AA (3.8:1 vs required 4.5:1). Affects dark mode filter panel and data grid. 2-day fix minimum.",
+    "timestamp": "2026-02-11T09:45:00-08:00"
+  },
+  {
+    "id": "sm_1004",
+    "channel": "#platform-engineering",
+    "channelId": "C_ENG",
+    "author": "james.liu",
+    "text": "Also FYI: the 'real-time analytics' feature was cut in Sprint 13. We replaced it with 30-second polling. Marketing press release still says 'real-time' and 'sub-second data refresh'. That needs to be corrected before we publish.",
+    "timestamp": "2026-02-11T10:30:00-08:00"
+  },
+  {
+    "id": "sm_1005",
+    "channel": "#platform-engineering",
+    "channelId": "C_ENG",
+    "author": "tom.anderson",
+    "text": "Infrastructure side is ready for launch. CI/CD pipeline is green, staging matches prod config, rollback plan is tested. My piece is go. But I'm worried about the other blockers.",
+    "timestamp": "2026-02-11T11:00:00-08:00"
+  },
+  {
+    "id": "sm_1006",
+    "channel": "#platform-engineering",
+    "channelId": "C_ENG",
+    "author": "marcus.johnson",
+    "text": "@alex.chen the beta users also flagged that the filter panel UX is confusing. 6 out of 10 struggled with multi-select. Did we ever address that? I don't see a ticket for it.",
+    "timestamp": "2026-02-11T11:30:00-08:00"
+  },
+  {
+    "id": "sm_1007",
+    "channel": "#platform-general",
+    "channelId": "C_GENERAL",
+    "author": "sarah.kim",
+    "text": "Dashboard V2 launch is Monday. @alex.chen please have a readiness assessment ready by Wednesday. David wants go/no-go with specific blockers. Be thorough.",
+    "timestamp": "2026-02-11T09:30:00-08:00"
+  },
+  {
+    "id": "sm_1008",
+    "channel": "#platform-general",
+    "channelId": "C_GENERAL",
+    "author": "david.park",
+    "text": "For the Dashboard V2 launch: I'd rather delay a week than launch with known P1 bugs or inaccurate marketing claims. Get me the real picture.",
+    "timestamp": "2026-02-11T10:00:00-08:00"
+  },
+  {
+    "id": "sm_1009",
+    "channel": "#platform-engineering",
+    "channelId": "C_ENG",
+    "author": "james.liu",
+    "text": "TC-990 update: found the root cause. The cursor pagination in the export API has an off-by-one error when filters are applied. Fix is straightforward but needs thorough testing. ETA: Thursday.",
+    "timestamp": "2026-02-11T14:00:00-08:00"
+  },
+  {
+    "id": "sm_1010",
+    "channel": "#platform-random",
+    "channelId": "C_RANDOM",
+    "author": "priya.patel",
+    "text": "Who's doing the launch party planning? We should book the rooftop.",
+    "timestamp": "2026-02-11T12:00:00-08:00"
+  },
+  {
+    "id": "sm_1011",
+    "channel": "#platform-random",
+    "channelId": "C_RANDOM",
+    "author": "tom.anderson",
+    "text": "Let's wait until we actually have a launch date confirmed before booking anything...",
+    "timestamp": "2026-02-11T12:05:00-08:00"
+  },
+  {
+    "id": "sm_1012",
+    "channel": "#incidents",
+    "channelId": "C_INCIDENTS",
+    "author": "tom.anderson",
+    "text": "No new incidents since Saturday's outage. All systems green. Connection pool monitoring added (TC-963 complete).",
+    "timestamp": "2026-02-11T09:15:00-08:00"
+  }
+]

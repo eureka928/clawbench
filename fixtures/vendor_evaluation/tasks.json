@@ -1,0 +1,50 @@
+[
+  {
+    "id": "TC-970",
+    "title": "Observability vendor evaluation — final recommendation",
+    "description": "Compile vendor evaluations, compare against requirements, and prepare recommendation for exec meeting.",
+    "status": "in_progress",
+    "priority": "critical",
+    "assignee": "alex.chen",
+    "sprint": "Sprint 14",
+    "due_date": "2026-02-13",
+    "labels": ["vendor-eval", "executive"],
+    "notes": "Exec meeting Thursday 10am. Three vendors: DataSentry, Grafana Cloud, ObsAI. SOC 2 is mandatory."
+  },
+  {
+    "id": "TC-971",
+    "title": "Vendor security compliance review",
+    "description": "CISO review of SOC 2 and security posture for all three observability vendors.",
+    "status": "done",
+    "priority": "high",
+    "assignee": "marina.chen",
+    "sprint": "Sprint 14",
+    "due_date": "2026-02-12",
+    "labels": ["vendor-eval", "security"],
+    "notes": "Complete. DataSentry: SOC 2 Type II. Grafana: NO SOC 2. ObsAI: SOC 2 Type I only."
+  },
+  {
+    "id": "TC-972",
+    "title": "Engineering team vendor preference poll",
+    "description": "Poll engineering team on vendor preferences for observability platform.",
+    "status": "done",
+    "priority": "medium",
+    "assignee": "marcus.johnson",
+    "sprint": "Sprint 14",
+    "due_date": "2026-02-12",
+    "labels": ["vendor-eval"],
+    "notes": "Complete. Results: Grafana 4/6, DataSentry 1/6, ObsAI 1/6."
+  },
+  {
+    "id": "TC-973",
+    "title": "Vendor TCO analysis",
+    "description": "Calculate total cost of ownership for each vendor including hidden costs, setup, support, and engineering effort.",
+    "status": "open",
+    "priority": "high",
+    "assignee": "alex.chen",
+    "sprint": "Sprint 14",
+    "due_date": "2026-02-13",
+    "labels": ["vendor-eval", "finance"],
+    "notes": "Need to factor in Grafana's hidden setup ($30K) and support ($12K/yr) costs. Also engineering effort for custom alerting."
+  }
+]

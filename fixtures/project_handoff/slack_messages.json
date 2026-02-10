@@ -1,0 +1,66 @@
+[
+  {
+    "id": "sm_501",
+    "channel": "#platform-engineering",
+    "channelId": "C_ENG",
+    "author": "marcus.johnson",
+    "text": "@alex.chen before you go on vacation — I need the Redis replication decision (single vs multi-region) by Monday morning at the latest. Tom and I are blocked on the load test setup without it.",
+    "timestamp": "2026-02-06T15:00:00-08:00"
+  },
+  {
+    "id": "sm_502",
+    "channel": "#platform-engineering",
+    "channelId": "C_ENG",
+    "author": "james.liu",
+    "text": "GraphQL prototype benchmarks are in! Analytics queries: 3x faster, 40% smaller payloads. I really think we should make this a Sprint 14 priority. Wrote up a one-pager. @alex.chen can we chat before you leave?",
+    "timestamp": "2026-02-06T15:30:00-08:00"
+  },
+  {
+    "id": "sm_503",
+    "channel": "#platform-engineering",
+    "channelId": "C_ENG",
+    "author": "tom.anderson",
+    "text": "FYI — the Redis cluster is stable but I want to do a failover test before we put production traffic on it. Planning for Tuesday. Will need Marcus to coordinate on the auth migration side.",
+    "timestamp": "2026-02-06T14:00:00-08:00"
+  },
+  {
+    "id": "sm_504",
+    "channel": "#platform-general",
+    "channelId": "C_GENERAL",
+    "author": "sarah.kim",
+    "text": "Reminder: Alex is OOO next week (Feb 10-14). I'll be covering PM duties. Please escalate anything urgent to me. Alex — please send me the handoff doc by EOD today.",
+    "timestamp": "2026-02-06T11:00:00-08:00"
+  },
+  {
+    "id": "sm_505",
+    "channel": "#platform-general",
+    "channelId": "C_GENERAL",
+    "author": "priya.patel",
+    "text": "Starting the detailed Dashboard V2 specs based on the Option B mockups. Should have wireframes for the main views by mid-week. Will need PM review — @sarah.kim can you cover while Alex is out?",
+    "timestamp": "2026-02-06T13:00:00-08:00"
+  },
+  {
+    "id": "sm_506",
+    "channel": "#platform-engineering",
+    "channelId": "C_ENG",
+    "author": "david.park",
+    "text": "Auth migration arch review follow-up on Tuesday 3pm. We need to finalize the replication topology. Alex, if you're out, who's representing your team? This can't slip again.",
+    "timestamp": "2026-02-06T16:00:00-08:00"
+  },
+  {
+    "id": "sm_507",
+    "channel": "#platform-random",
+    "channelId": "C_RANDOM",
+    "author": "priya.patel",
+    "text": "Happy Friday tomorrow! Anyone doing anything fun this weekend?",
+    "timestamp": "2026-02-06T17:00:00-08:00"
+  },
+  {
+    "id": "sm_508",
+    "channel": "#platform-random",
+    "channelId": "C_RANDOM",
+    "author": "james.liu",
+    "text": "Going skiing at Tahoe! Perfect snow this week.",
+    "timestamp": "2026-02-06T17:05:00-08:00"
+  }
+]

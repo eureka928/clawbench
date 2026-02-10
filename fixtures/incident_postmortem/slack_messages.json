@@ -1,0 +1,98 @@
+[
+  {
+    "id": "sm_801",
+    "channel": "#incidents",
+    "channelId": "C_INCIDENTS",
+    "author": "pagerduty-bot",
+    "text": "P0 ALERT: platform-api 503 error rate > 50%. On-call: @tom.anderson. Triggered at 2:03 AM.",
+    "timestamp": "2026-02-08T02:03:00-08:00"
+  },
+  {
+    "id": "sm_802",
+    "channel": "#incidents",
+    "channelId": "C_INCIDENTS",
+    "author": "tom.anderson",
+    "text": "Acknowledged. Investigating. DB connection pool at 100% — all connections exhausted. Restarting pods.",
+    "timestamp": "2026-02-08T02:15:00-08:00"
+  },
+  {
+    "id": "sm_803",
+    "channel": "#incidents",
+    "channelId": "C_INCIDENTS",
+    "author": "tom.anderson",
+    "text": "Pod restart didn't help — connections immediately re-saturated. Escalating to @marcus.johnson.",
+    "timestamp": "2026-02-08T02:50:00-08:00"
+  },
+  {
+    "id": "sm_804",
+    "channel": "#incidents",
+    "channelId": "C_INCIDENTS",
+    "author": "marcus.johnson",
+    "text": "Joining. I think the caching layer might be holding connections open. Going to instrument it.",
+    "timestamp": "2026-02-08T03:20:00-08:00"
+  },
+  {
+    "id": "sm_805",
+    "channel": "#incidents",
+    "channelId": "C_INCIDENTS",
+    "author": "marcus.johnson",
+    "text": "Cache instrumentation shows normal connection patterns. Caching layer is NOT the issue. Back to square one.",
+    "timestamp": "2026-02-08T04:35:00-08:00"
+  },
+  {
+    "id": "sm_806",
+    "channel": "#incidents",
+    "channelId": "C_INCIDENTS",
+    "author": "tom.anderson",
+    "text": "Found it! Friday's auto-scaling deploy (PR #412) doubled pods from 8 to 16. Each pod opens 10 DB connections. 16 x 10 = 160 needed, but pool limit is 100. That's why connections are exhausted. Scaling back to 8 pods now.",
+    "timestamp": "2026-02-08T05:05:00-08:00"
+  },
+  {
+    "id": "sm_807",
+    "channel": "#incidents",
+    "channelId": "C_INCIDENTS",
+    "author": "tom.anderson",
+    "text": "Scaled back to 8 pods. Connections at 80/100. Services recovering. Some stale connection state causing intermittent failures — doing a full rolling restart.",
+    "timestamp": "2026-02-08T05:35:00-08:00"
+  },
+  {
+    "id": "sm_808",
+    "channel": "#incidents",
+    "channelId": "C_INCIDENTS",
+    "author": "tom.anderson",
+    "text": "All services confirmed healthy at 10:14 AM. Incident resolved. Total duration: ~8 hours. Postmortem needed — @alex.chen.",
+    "timestamp": "2026-02-08T10:15:00-08:00"
+  },
+  {
+    "id": "sm_809",
+    "channel": "#platform-engineering",
+    "channelId": "C_ENG",
+    "author": "marcus.johnson",
+    "text": "Post-incident note: my initial caching theory was wrong. The real root cause was the auto-scaling deploy not accounting for DB connection pool limits. This is the SAME pattern as the November incident (INC-2025-0089). We never implemented the connection pool scaling policy from that postmortem.",
+    "timestamp": "2026-02-08T11:00:00-08:00"
+  },
+  {
+    "id": "sm_810",
+    "channel": "#platform-engineering",
+    "channelId": "C_ENG",
+    "author": "james.liu",
+    "text": "My PR #412 triggered this — the deploy checklist doesn't include a DB connection limit verification step. We should add that. Also, can we get an automated check that validates connection math before any scaling change?",
+    "timestamp": "2026-02-08T12:00:00-08:00"
+  },
+  {
+    "id": "sm_811",
+    "channel": "#platform-general",
+    "channelId": "C_GENERAL",
+    "author": "sarah.kim",
+    "text": "Reminder: postmortem for Saturday's outage is due before the 2pm all-hands today. @alex.chen is drafting it. David wants root cause + prevention plan + link to November's incident.",
+    "timestamp": "2026-02-10T08:30:00-08:00"
+  },
+  {
+    "id": "sm_812",
+    "channel": "#platform-random",
+    "channelId": "C_RANDOM",
+    "author": "priya.patel",
+    "text": "Well that was a fun weekend. Anyone else get woken up by the PagerDuty alerts? At least we have good war stories now.",
+    "timestamp": "2026-02-10T09:00:00-08:00"
+  }
+]

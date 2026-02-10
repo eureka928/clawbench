@@ -1,0 +1,50 @@
+[
+  {
+    "id": "TC-960",
+    "title": "Incident postmortem — INC-2026-0042",
+    "description": "Write postmortem for Saturday Feb 8 production outage. Due before 2pm all-hands Monday.",
+    "status": "in_progress",
+    "priority": "critical",
+    "assignee": "alex.chen",
+    "sprint": "Sprint 14",
+    "due_date": "2026-02-10",
+    "labels": ["incident", "postmortem"],
+    "notes": "8-hour outage (2am-10am). DB connection pool exhaustion caused by auto-scaling deploy."
+  },
+  {
+    "id": "TC-961",
+    "title": "Add DB connection limit check to deploy pipeline",
+    "description": "Add an automated check to the deploy pipeline that validates connection pool math before any scaling change.",
+    "status": "open",
+    "priority": "high",
+    "assignee": "james.liu",
+    "sprint": "Sprint 14",
+    "due_date": "2026-02-14",
+    "labels": ["incident-followup", "deploy-pipeline"],
+    "notes": "Created after INC-2026-0042. PR #412 triggered outage because no connection limit check existed."
+  },
+  {
+    "id": "TC-962",
+    "title": "Implement connection pool scaling policy",
+    "description": "Create an automated policy that adjusts DB connection pool limits when pod count changes. Originally from November incident (INC-2025-0089) — never completed.",
+    "status": "open",
+    "priority": "high",
+    "assignee": "tom.anderson",
+    "sprint": "Backlog",
+    "due_date": null,
+    "labels": ["incident-followup", "tech-debt", "recurring"],
+    "notes": "RECURRING: This was an action item from INC-2025-0089 (November 2025). Never prioritized. Now caused a second outage."
+  },
+  {
+    "id": "TC-963",
+    "title": "Add connection pool utilization alerting",
+    "description": "Set up alerting when DB connection pool utilization exceeds 80%. Currently no alert until 100% (outage).",
+    "status": "open",
+    "priority": "medium",
+    "assignee": "tom.anderson",
+    "sprint": "Sprint 14",
+    "due_date": "2026-02-14",
+    "labels": ["incident-followup", "monitoring"],
+    "notes": "We only got alerted at 100% utilization. Need earlier warning."
+  }
+]

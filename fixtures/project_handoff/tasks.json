@@ -1,0 +1,98 @@
+[
+  {
+    "id": "TC-880",
+    "title": "Auth migration — session management refactor",
+    "description": "Refactor session management to support the new auth flow. Complete load testing with Redis cluster.",
+    "status": "in_progress",
+    "priority": "critical",
+    "assignee": "marcus.johnson",
+    "sprint": "Sprint 14",
+    "due_date": "2026-02-14",
+    "labels": ["sprint-goal", "auth-migration"],
+    "notes": "Carried from Sprint 13. Redis provisioned, load testing in progress. Needs replication topology decision."
+  },
+  {
+    "id": "TC-940",
+    "title": "Board deck — product metrics section",
+    "description": "Finalize Q4 revenue per product line, churn numbers, NPS trend, and platform roadmap slide for the board deck.",
+    "status": "in_progress",
+    "priority": "critical",
+    "assignee": "alex.chen",
+    "sprint": "Sprint 14",
+    "due_date": "2026-02-12",
+    "labels": ["executive"],
+    "notes": "Elena needs this by Wed noon. Data is mostly ready, needs final formatting."
+  },
+  {
+    "id": "TC-941",
+    "title": "Acme Corp quarterly review prep",
+    "description": "Prepare product roadmap update and SSO integration timeline for Acme quarterly business review.",
+    "status": "open",
+    "priority": "high",
+    "assignee": "alex.chen",
+    "sprint": "Sprint 14",
+    "due_date": "2026-02-12",
+    "labels": ["client", "acme"],
+    "notes": "QBR is Wednesday Feb 12 at 2pm. Dana Reeves + Acme CEO attending."
+  },
+  {
+    "id": "TC-935",
+    "title": "GraphQL prototype for dashboard API",
+    "description": "Build proof-of-concept using GraphQL for the analytics query endpoint. Evaluate vs REST.",
+    "status": "in_review",
+    "priority": "medium",
+    "assignee": "james.liu",
+    "sprint": "Sprint 14",
+    "due_date": "2026-02-14",
+    "labels": ["dashboard-v2", "prototype"],
+    "notes": "Prototype complete. 3x faster than REST, 40% less payload. James proposing as Sprint 14 goal."
+  },
+  {
+    "id": "TC-942",
+    "title": "SOC 2 remediation tracking",
+    "description": "Create tracking tasks for SOC 2 remediation items: API key rotation, export attribution, session timeout.",
+    "status": "open",
+    "priority": "medium",
+    "assignee": "alex.chen",
+    "sprint": "Sprint 14",
+    "due_date": "2026-02-21",
+    "labels": ["security", "compliance"],
+    "notes": "CISO deadline extended to Feb 21. Need to assign owners."
+  },
+  {
+    "id": "TC-930",
+    "title": "Investigate caching layer race condition",
+    "description": "Full investigation of the caching race condition exposed by auth changes. May need rewrite.",
+    "status": "in_progress",
+    "priority": "high",
+    "assignee": "marcus.johnson",
+    "sprint": "Sprint 14",
+    "due_date": "2026-02-14",
+    "labels": ["tech-debt", "incident-followup"],
+    "notes": "Mutex hot-fix in place. Marcus investigating scope of rewrite needed."
+  },
+  {
+    "id": "TC-943",
+    "title": "Performance review — direct reports",
+    "description": "Complete performance reviews for Marcus, James, Priya, Tom.",
+    "status": "open",
+    "priority": "medium",
+    "assignee": "alex.chen",
+    "sprint": "Sprint 14",
+    "due_date": "2026-02-14",
+    "labels": ["management"],
+    "notes": "Original deadline Feb 14. Check if extended."
+  },
+  {
+    "id": "TC-944",
+    "title": "Acme contract renewal — technical review",
+    "description": "Review technical deliverables section of Acme contract renewal. Confirm feasibility of SSO + dedicated support.",
+    "status": "open",
+    "priority": "high",
+    "assignee": "alex.chen",
+    "sprint": "Sprint 14",
+    "due_date": "2026-02-14",
+    "labels": ["client", "legal", "confidential"],
+    "notes": "CONFIDENTIAL — $1.2M annual value. Legal needs sign-off by Feb 14."
+  }
+]

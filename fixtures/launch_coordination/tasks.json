@@ -1,0 +1,98 @@
+[
+  {
+    "id": "TC-985",
+    "title": "Dashboard V2 — final QA pass",
+    "description": "Complete final QA testing of all Dashboard V2 features before launch.",
+    "status": "in_progress",
+    "priority": "critical",
+    "assignee": "james.liu",
+    "sprint": "Sprint 14",
+    "due_date": "2026-02-14",
+    "labels": ["dashboard-v2", "qa"],
+    "notes": "QA in progress. Export bug (TC-990) found during testing."
+  },
+  {
+    "id": "TC-986",
+    "title": "Dashboard V2 — performance benchmarks on production data",
+    "description": "Validate 50% performance improvement claim on production-scale data (2M+ rows).",
+    "status": "in_progress",
+    "priority": "high",
+    "assignee": "marcus.johnson",
+    "sprint": "Sprint 14",
+    "due_date": "2026-02-13",
+    "labels": ["dashboard-v2", "performance"],
+    "notes": "Previous benchmark was 10K rows on staging only. Need 2M row validation. Postponed last week due to incident."
+  },
+  {
+    "id": "TC-987",
+    "title": "Dashboard V2 — support training materials",
+    "description": "Create training docs, FAQ, and troubleshooting guide for support team.",
+    "status": "open",
+    "priority": "high",
+    "assignee": "unassigned",
+    "sprint": "Sprint 14",
+    "due_date": "2026-02-13",
+    "labels": ["dashboard-v2", "support"],
+    "notes": "Support team has NOT been briefed. Lisa Park needs materials by Thursday."
+  },
+  {
+    "id": "TC-988",
+    "title": "Dashboard V2 — marketing copy review",
+    "description": "Review press release and marketing materials for technical accuracy.",
+    "status": "open",
+    "priority": "high",
+    "assignee": "alex.chen",
+    "sprint": "Sprint 14",
+    "due_date": "2026-02-13",
+    "labels": ["dashboard-v2", "marketing"],
+    "notes": "Press release claims: real-time analytics, 50% faster, WCAG AA compliant. Need to verify ALL claims."
+  },
+  {
+    "id": "TC-989",
+    "title": "Dashboard V2 — WCAG AA accessibility fix",
+    "description": "Fix contrast ratio issue in dark mode data table and filter panel. Currently 3.8:1, needs 4.5:1.",
+    "status": "open",
+    "priority": "medium",
+    "assignee": "priya.patel",
+    "sprint": "Sprint 14",
+    "due_date": "2026-02-14",
+    "labels": ["dashboard-v2", "accessibility"],
+    "notes": "Design sign-off was 'with reservations'. 12 components need updating. 2-day effort minimum."
+  },
+  {
+    "id": "TC-990",
+    "title": "P1 BUG: Export drops rows on filtered datasets > 50K",
+    "description": "Dashboard V2 data export silently drops rows when exporting filtered datasets larger than 50K rows. CSV is incomplete.",
+    "status": "in_progress",
+    "priority": "critical",
+    "assignee": "james.liu",
+    "sprint": "Sprint 14",
+    "due_date": "2026-02-13",
+    "labels": ["dashboard-v2", "bug", "P1", "launch-blocker"],
+    "notes": "LAUNCH BLOCKER. Root cause: cursor pagination off-by-one with filters. ETA fix: Thursday."
+  },
+  {
+    "id": "TC-991",
+    "title": "Dashboard V2 — CI/CD pipeline + rollback plan",
+    "description": "Ensure deployment pipeline is ready and rollback plan is tested.",
+    "status": "done",
+    "priority": "high",
+    "assignee": "tom.anderson",
+    "sprint": "Sprint 14",
+    "due_date": "2026-02-10",
+    "labels": ["dashboard-v2", "infrastructure"],
+    "notes": "Complete. Pipeline green, rollback tested."
+  },
+  {
+    "id": "TC-992",
+    "title": "Dashboard V2 — launch readiness assessment",
+    "description": "Compile go/no-go assessment covering engineering, marketing, support, and design readiness.",
+    "status": "in_progress",
+    "priority": "critical",
+    "assignee": "alex.chen",
+    "sprint": "Sprint 14",
+    "due_date": "2026-02-12",
+    "labels": ["dashboard-v2", "launch"],
+    "notes": "Due Wednesday. David wants specific blockers and honest assessment."
+  }
+]

@@ -1,0 +1,82 @@
+[
+  {
+    "id": "sm_901",
+    "channel": "#platform-engineering",
+    "channelId": "C_ENG",
+    "author": "marcus.johnson",
+    "text": "Just did the team poll on observability vendors. Grafana Cloud won 4-1-1. Engineers love the open-source ecosystem and PromQL. DataSentry feels too enterprise-y for us.",
+    "timestamp": "2026-02-12T10:30:00-08:00"
+  },
+  {
+    "id": "sm_902",
+    "channel": "#platform-engineering",
+    "channelId": "C_ENG",
+    "author": "james.liu",
+    "text": "Strong +1 for Grafana. I've used it at my last two companies. The dashboard flexibility is unmatched. DataSentry's dashboards are rigid and the learning curve is steep.",
+    "timestamp": "2026-02-12T10:45:00-08:00"
+  },
+  {
+    "id": "sm_903",
+    "channel": "#platform-engineering",
+    "channelId": "C_ENG",
+    "author": "tom.anderson",
+    "text": "I voted DataSentry but I get why the team prefers Grafana. My concern is the 99.5% SLA on ObsAI — that's way below our 99.9% target. And has anyone checked if Grafana has SOC 2?",
+    "timestamp": "2026-02-12T11:15:00-08:00"
+  },
+  {
+    "id": "sm_904",
+    "channel": "#platform-engineering",
+    "channelId": "C_ENG",
+    "author": "priya.patel",
+    "text": "From a UX perspective, Grafana dashboards are beautiful and highly customizable. DataSentry looks like it was designed in 2015. ObsAI has nice AI features but the basic dashboarding is weak.",
+    "timestamp": "2026-02-12T11:30:00-08:00"
+  },
+  {
+    "id": "sm_905",
+    "channel": "#platform-engineering",
+    "channelId": "C_ENG",
+    "author": "marcus.johnson",
+    "text": "@alex.chen FYI — I noticed the ObsAI sales email mentions their CEO knows David Park personally (Stanford classmates). Might want to flag that as a potential conflict of interest before the exec meeting.",
+    "timestamp": "2026-02-12T14:00:00-08:00"
+  },
+  {
+    "id": "sm_906",
+    "channel": "#platform-general",
+    "channelId": "C_GENERAL",
+    "author": "sarah.kim",
+    "text": "Reminder: vendor recommendation is due at tomorrow's 10am exec meeting. @alex.chen — David wants a clear recommendation, not just a comparison. Make sure to address the SOC 2 requirement.",
+    "timestamp": "2026-02-12T14:30:00-08:00"
+  },
+  {
+    "id": "sm_907",
+    "channel": "#platform-general",
+    "channelId": "C_GENERAL",
+    "author": "david.park",
+    "text": "For the vendor eval: remember that SOC 2 compliance is non-negotiable per Marina's guidance. Also factor in total cost of ownership, not just sticker price. Hidden costs matter.",
+    "timestamp": "2026-02-12T12:00:00-08:00"
+  },
+  {
+    "id": "sm_908",
+    "channel": "#platform-random",
+    "channelId": "C_RANDOM",
+    "author": "james.liu",
+    "text": "Anyone tried that new ramen place on 3rd? Heard they have a 2-hour wait on weekends.",
+    "timestamp": "2026-02-12T12:30:00-08:00"
+  },
+  {
+    "id": "sm_909",
+    "channel": "#platform-random",
+    "channelId": "C_RANDOM",
+    "author": "priya.patel",
+    "text": "Yes! The tonkotsu is amazing. Go at 11am to beat the rush.",
+    "timestamp": "2026-02-12T12:35:00-08:00"
+  },
+  {
+    "id": "sm_910",
+    "channel": "#platform-engineering",
+    "channelId": "C_ENG",
+    "author": "tom.anderson",
+    "text": "Quick note: if we go with Grafana, we'd need to build custom alerting pipelines. I estimate 2-3 sprint capacity for that. DataSentry has it built-in. Factor that into TCO.",
+    "timestamp": "2026-02-12T14:45:00-08:00"
+  }
+]

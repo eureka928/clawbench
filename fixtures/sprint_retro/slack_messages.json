@@ -1,0 +1,90 @@
+[
+  {
+    "id": "sm_401",
+    "channel": "#platform-engineering",
+    "channelId": "C_ENG",
+    "author": "marcus.johnson",
+    "text": "Sprint 13 wrap-up: rate limiting (TC-891) shipped, error messages (TC-912) shipped, auth session management (TC-880) is in review but I'm not confident it's fully validated — we only got the Redis cluster Thursday afternoon so testing was rushed.",
+    "timestamp": "2026-02-07T14:30:00-08:00"
+  },
+  {
+    "id": "sm_402",
+    "channel": "#platform-engineering",
+    "channelId": "C_ENG",
+    "author": "marcus.johnson",
+    "text": "Also want to flag for retro: the production incident Wednesday night ate ~6-8 hours of my sprint capacity. The caching race condition investigation (TC-930) is started but not done. That was unplanned work that pushed out the auth testing.",
+    "timestamp": "2026-02-07T14:35:00-08:00"
+  },
+  {
+    "id": "sm_403",
+    "channel": "#platform-engineering",
+    "channelId": "C_ENG",
+    "author": "james.liu",
+    "text": "My sprint summary: timezone fix (TC-903) shipped, dashboard refactor (TC-885) merged. Also got the GraphQL prototype (TC-935) to a working state — basic analytics queries are 3x faster than REST. I think we should seriously consider it for Sprint 14.",
+    "timestamp": "2026-02-07T14:45:00-08:00"
+  },
+  {
+    "id": "sm_404",
+    "channel": "#platform-engineering",
+    "channelId": "C_ENG",
+    "author": "tom.anderson",
+    "text": "Redis provisioning (TC-920) done. CI pipeline fix (TC-890) done — it was my Docker compose change leaking into CI. Both wrapped up Thursday.",
+    "timestamp": "2026-02-07T15:00:00-08:00"
+  },
+  {
+    "id": "sm_405",
+    "channel": "#platform-engineering",
+    "channelId": "C_ENG",
+    "author": "priya.patel",
+    "text": "Dashboard mockups (TC-925) complete and reviewed. Option B was selected. Starting detailed specs next sprint. User research findings are incorporated.",
+    "timestamp": "2026-02-07T15:05:00-08:00"
+  },
+  {
+    "id": "sm_406",
+    "channel": "#platform-engineering",
+    "channelId": "C_ENG",
+    "author": "sarah.kim",
+    "text": "Good work everyone. For the retro, I want to discuss: (1) the incident response process — Marcus shouldn't be solo on-call during a sprint-critical week, (2) the Redis provisioning delay — why did it take until Thursday when it was identified week 1?",
+    "timestamp": "2026-02-07T15:15:00-08:00"
+  },
+  {
+    "id": "sm_407",
+    "channel": "#platform-general",
+    "channelId": "C_GENERAL",
+    "author": "david.park",
+    "text": "Sprint 13 was a tough one. Auth migration is the #1 company priority — I need to know if the sprint goal was actually met or just partially. Be honest in retro.",
+    "timestamp": "2026-02-07T15:30:00-08:00"
+  },
+  {
+    "id": "sm_408",
+    "channel": "#platform-engineering",
+    "channelId": "C_ENG",
+    "author": "marcus.johnson",
+    "text": "To be clear on the sprint goal: auth migration session management is in review but NOT fully validated. We need at least another day of testing with the Redis cluster under load before I'd call it production-ready. So technically the sprint goal was not met.",
+    "timestamp": "2026-02-07T15:40:00-08:00"
+  },
+  {
+    "id": "sm_409",
+    "channel": "#platform-random",
+    "channelId": "C_RANDOM",
+    "author": "priya.patel",
+    "text": "Happy Friday! Anyone up for drinks after retro? That new cocktail bar on Valencia opened this week.",
+    "timestamp": "2026-02-07T15:00:00-08:00"
+  },
+  {
+    "id": "sm_410",
+    "channel": "#platform-random",
+    "channelId": "C_RANDOM",
+    "author": "james.liu",
+    "text": "Count me in! Need to decompress after this sprint.",
+    "timestamp": "2026-02-07T15:10:00-08:00"
+  },
+  {
+    "id": "sm_411",
+    "channel": "#incidents",
+    "channelId": "C_INCIDENTS",
+    "author": "marcus.johnson",
+    "text": "Postmortem for the Feb 5 analytics incident is published. Key takeaway: we need better test coverage for concurrent access patterns. The caching layer rewrite should be Sprint 14 priority.",
+    "timestamp": "2026-02-07T10:00:00-08:00"
+  }
+]

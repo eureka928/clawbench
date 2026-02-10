@@ -1,0 +1,122 @@
+[
+  {
+    "id": "TC-880",
+    "title": "Auth migration — session management refactor",
+    "description": "Refactor session management to support the new auth flow. Includes multi-device session handling and token rotation.",
+    "status": "in_review",
+    "priority": "critical",
+    "assignee": "marcus.johnson",
+    "sprint": "Sprint 13",
+    "due_date": "2026-02-07",
+    "labels": ["sprint-goal", "auth-migration"],
+    "notes": "Code complete but Redis cluster wasn't provisioned until late Thursday. Only 2 hours of testing done — not fully validated."
+  },
+  {
+    "id": "TC-891",
+    "title": "Add rate limiting to public API",
+    "description": "Implement sliding window rate limiting for public API endpoints. 100 req/min for free tier, 1000 for paid.",
+    "status": "done",
+    "priority": "high",
+    "assignee": "marcus.johnson",
+    "sprint": "Sprint 13",
+    "due_date": "2026-02-07",
+    "labels": ["api"],
+    "notes": "Merged Wednesday. Sliding window approach."
+  },
+  {
+    "id": "TC-903",
+    "title": "Fix timezone bug in scheduler",
+    "description": "Recurring events use local time instead of UTC, causing wrong trigger times for users in different timezones.",
+    "status": "done",
+    "priority": "high",
+    "assignee": "james.liu",
+    "sprint": "Sprint 13",
+    "due_date": "2026-02-07",
+    "labels": ["bug"],
+    "notes": "Fixed Wednesday, regression tests added."
+  },
+  {
+    "id": "TC-912",
+    "title": "Update error messages for auth flow",
+    "description": "Replace generic 'Auth failed' with specific, actionable error messages.",
+    "status": "done",
+    "priority": "medium",
+    "assignee": "marcus.johnson",
+    "sprint": "Sprint 13",
+    "due_date": "2026-02-07",
+    "labels": ["auth-migration", "ux"],
+    "notes": "Completed Tuesday."
+  },
+  {
+    "id": "TC-885",
+    "title": "Dashboard data layer refactor",
+    "description": "Move dashboard data fetching to the new service pattern. Prep for GraphQL migration.",
+    "status": "done",
+    "priority": "high",
+    "assignee": "james.liu",
+    "sprint": "Sprint 13",
+    "due_date": "2026-02-07",
+    "labels": ["dashboard-v2"],
+    "notes": "PR #342 merged Thursday after Alex's review."
+  },
+  {
+    "id": "TC-920",
+    "title": "Redis cluster provisioning for auth",
+    "description": "Provision Redis cluster (managed or self-hosted) for session storage in the new auth flow.",
+    "status": "done",
+    "priority": "critical",
+    "assignee": "tom.anderson",
+    "sprint": "Sprint 13",
+    "due_date": "2026-02-06",
+    "labels": ["infrastructure", "auth-migration"],
+    "notes": "Provisioned Thursday after arch review. Managed option selected ($400/mo)."
+  },
+  {
+    "id": "TC-925",
+    "title": "Dashboard V2 — design mockups",
+    "description": "Create 3 layout options for the new analytics dashboard view.",
+    "status": "done",
+    "priority": "medium",
+    "assignee": "priya.patel",
+    "sprint": "Sprint 13",
+    "due_date": "2026-02-06",
+    "labels": ["dashboard-v2", "design"],
+    "notes": "Design review completed. Option B selected (data-dense)."
+  },
+  {
+    "id": "TC-930",
+    "title": "Investigate caching layer race condition",
+    "description": "The /api/v2/analytics incident revealed a race condition in the caching layer. Needs investigation and potentially a rewrite.",
+    "status": "in_progress",
+    "priority": "high",
+    "assignee": "marcus.johnson",
+    "sprint": "Sprint 13",
+    "due_date": "2026-02-07",
+    "labels": ["tech-debt", "incident-followup"],
+    "notes": "Marcus spent 6-8 hours on incident response Wed night + postmortem Thu. Investigation started but not complete."
+  },
+  {
+    "id": "TC-931",
+    "title": "Write incident postmortem — analytics error spike",
+    "description": "Document root cause, impact, fix, and preventive measures for the Feb 5 /api/v2/analytics incident.",
+    "status": "done",
+    "priority": "medium",
+    "assignee": "marcus.johnson",
+    "sprint": "Sprint 13",
+    "due_date": "2026-02-07",
+    "labels": ["incident-followup"],
+    "notes": "Postmortem published Thursday. 847 users affected, ~3 hours."
+  },
+  {
+    "id": "TC-935",
+    "title": "GraphQL prototype for dashboard API",
+    "description": "Build a small proof-of-concept using GraphQL for the analytics query endpoint.",
+    "status": "in_progress",
+    "priority": "medium",
+    "assignee": "james.liu",
+    "sprint": "Sprint 13",
+    "due_date": "2026-02-07",
+    "labels": ["dashboard-v2", "prototype"],
+    "notes": "James started this without PM approval. Basic query endpoint working. Not in original sprint plan."
+  }
+]
