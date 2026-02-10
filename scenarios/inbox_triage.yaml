@@ -26,6 +26,7 @@ prompt: >
 variants:
   baseline: AGENTS.md.baseline
   optimized: AGENTS.md.optimized
+  miner: AGENTS.md.miner
 
 # Workspace files to copy (relative to fixtures/{scenario}/)
 workspace:

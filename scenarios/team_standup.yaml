@@ -40,6 +40,7 @@ prompt: >
 variants:
   baseline: AGENTS.md.baseline
   optimized: AGENTS.md.optimized
+  miner: AGENTS.md.miner
 
 workspace:
   USER.md: USER.md
