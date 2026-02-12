@@ -163,8 +163,11 @@ class EpisodeRunner:
             result.success_reason = (
                 f"{score_result.get('passed', 0)}/{score_result.get('total_checks', 0)} checks passed"
             )
+        else:
+            result.success = True
+            result.success_reason = "no scoring checks defined"
 
-        console.print(f"  [bold]Score: {result.score:.2f}[/bold]")
+        console.print(f"  [bold]Score: {result.score:.0%}[/bold]")
         return result
 
     def _is_terminal(self, content: str, scenario: Scenario) -> bool:

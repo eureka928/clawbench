@@ -42,7 +42,7 @@ def run(
     # Print result
     console.print("\n[bold]Result:[/bold]")
     console.print(f"  Success: {result.success}")
-    console.print(f"  Score: {result.score:.2f}")
+    console.print(f"  Score: {result.score:.0%}")
     console.print(f"  Tool calls: {result.metrics.get('tool_calls', 0)}")
     console.print(f"  Turns: {result.metrics.get('turns', 0)}")
 
@@ -84,9 +84,9 @@ def compare(
     
     table.add_row(
         "Avg Score",
-        f"{bl['avg_score']:.2f}",
-        f"{op['avg_score']:.2f}",
-        f"{imp['score_delta']:+.2f}",
+        f"{bl['avg_score']:.0%}",
+        f"{op['avg_score']:.0%}",
+        f"{imp['score_delta']:+.0%}",
     )
     table.add_row(
         "Avg Tool Calls",
