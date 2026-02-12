@@ -218,6 +218,7 @@ logs/*
 # Config with secrets
 config/*.json
 !config/*.example.json
+!config/openclaw.json
 
 # Environment variables with secrets
 .env

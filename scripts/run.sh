@@ -2,16 +2,15 @@
 # Run ClawBench
 #
 # Usage:
-#   ./scripts/run.sh <scenario> [variant]
+#   ./scripts/run.sh [scenario] [variant]
 #
 #   ./scripts/run.sh inbox_triage baseline
-#   ./scripts/run.sh inbox_triage optimized
+#   ./scripts/run.sh morning_brief optimized
 #   ./scripts/run.sh --list                  # list available scenarios
 #
 # Prerequisites:
 #   1. cp .env.example .env
 #   2. Edit .env with your API key
-#   3. pip install pyyaml  (for setup_scenario.py)
 
 set -e
 
@@ -49,13 +48,9 @@ if [ -z "$ANTHROPIC_API_KEY" ] && [ -z "$OPENAI_API_KEY" ]; then
     exit 1
 fi
 
-# Parse arguments
-SCENARIO="${1:-inbox_triage}"
-VARIANT="${2:-baseline}"
-
-# Setup scenario (generates openclaw.json, copies workspace files)
-echo ""
-python scripts/setup_scenario.py "$SCENARIO" "$VARIANT"
+# Parse arguments (override .env defaults)
+SCENARIO="${1:-${SCENARIO:-client_escalation}}"
+VARIANT="${2:-${VARIANT:-optimized}}"
 
 # Get token and port from .env or use defaults
 TOKEN="${OPENCLAW_GATEWAY_TOKEN:-sandbox-token-12345}"
@@ -75,5 +70,5 @@ echo ""
 echo "Press Ctrl+C to stop"
 echo ""
 
-# Build and run — use generated scenario env alongside .env
-docker compose up --build
+# Build and run — init container handles workspace setup
+SCENARIO="$SCENARIO" VARIANT="$VARIANT" docker compose up --build
