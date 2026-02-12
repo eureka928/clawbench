@@ -45,39 +45,27 @@ Beyond one-off testing, the deterministic scoring output is a **reward signal**.
 
 ---
 
-## Features
-
-- **Real tool schemas** — agent sees the exact same tool names and parameters as production OpenClaw
-- **Deterministic** — fixture-backed responses: same scenario, same inputs, every time
-- **Trajectory-aware scoring** — not just what the agent said, but which tools it called and in what order
-- **Safety checks** — detect confidential data leaks, unauthorized sends, missing approvals
-- **No LLM judge** — regex-based rubric, zero inference cost for scoring
-- **A/B testing** — each scenario ships with `baseline` and `optimized` AGENTS.md variants
-- **RL-ready reward signal** — normalized scores drive prompt optimization loops and model fine-tuning
-- **4-layer testing** — from in-process unit tests to full Docker integration
-- **Docker or standalone** — `docker compose` for full integration, or run mock tools standalone
-
----
-
 ## Quick Start
 
 ### Option A: Full integration (Docker)
 
 ```bash
 cd clawbench
-pip install -r requirements.txt
 
-# 1. Setup a scenario
-python scripts/setup_scenario.py client_escalation optimized
-
-# 2. Create .env with your API key
+# 1. Create .env with your API key
 cp .env.example .env   # then edit: ANTHROPIC_API_KEY=sk-ant-...
 
-# 3. Start services
-docker compose up -d --build
+# 2. Start services (init container handles workspace setup)
+SCENARIO=client_escalation docker compose up --build
 
-# 4. Run an episode
+# 3. Run an episode (in another terminal)
 python scripts/run_episode.py --scenario client_escalation --wait
+```
+
+Or use the helper script:
+
+```bash
+./scripts/run.sh client_escalation optimized
 ```
 
 Dashboard: `http://localhost:18790/?token=sandbox-token-12345`
@@ -111,7 +99,7 @@ All scenarios share the same universe: **Alex Chen**, Tech Lead at TechCorp, wit
 
 ```bash
 # List all available scenarios
-python scripts/setup_scenario.py --list
+python scripts/run_episode.py --list
 ```
 
 ### `client_escalation`
@@ -162,10 +150,9 @@ flowchart LR
     D -- "safety / correctness\nefficiency / structure" --> E["Results JSON"]
 ```
 
-1. **`setup_scenario.py`** reads a scenario YAML and generates the OpenClaw config, workspace files, and selected AGENTS.md variant
-2. **`docker compose up`** starts the mock server (FastAPI, port 3001) and OpenClaw gateway (port 18790)
-3. **`run_episode.py`** sends the scenario prompt to OpenClaw and collects the tool call log from the mock server
-4. **Scoring** evaluates the episode against the scenario rubric — no LLM calls, pure regex
+1. **`docker compose up`** starts an init container (copies AGENTS.md + workspace files for the selected scenario), the mock server (FastAPI, port 3001), and OpenClaw gateway (port 18790)
+2. **`run_episode.py`** sends the scenario prompt to OpenClaw and collects the tool call log from the mock server
+3. **Scoring** evaluates the episode against the scenario rubric — no LLM calls, pure regex
 
 ---
 
@@ -260,14 +247,13 @@ scoring:
 | `documents.json` | `exec` (curl notion pages) | Optional |
 | `memory/*.md` | `memory_search` / `memory_get` | Optional |
 | `USER.md` | `read` tool | Recommended |
-| `AGENTS.md.baseline` | Setup script | At least one variant |
-| `AGENTS.md.optimized` | Setup script | At least one variant |
+| `AGENTS.md.baseline` | Init container | At least one variant |
+| `AGENTS.md.optimized` | Init container | At least one variant |
 
 3. **Run it**:
 
 ```bash
-python scripts/setup_scenario.py my_scenario optimized
-docker compose up --build
+SCENARIO=my_scenario VARIANT=optimized docker compose up --build
 python scripts/run_episode.py --scenario my_scenario
 ```
 
@@ -323,8 +309,7 @@ python scripts/test_mock_tools.py
 
 ```bash
 # Terminal 1
-python scripts/setup_scenario.py client_escalation optimized
-docker compose up --build
+SCENARIO=client_escalation VARIANT=optimized docker compose up --build
 
 # Terminal 2 (after services are healthy)
 python scripts/test_mock_tools.py                          # mock tool tests
@@ -384,8 +369,8 @@ For full integration tests (Layer 4 with LLM), run on a schedule or manually:
     steps:
       - uses: actions/checkout@v4
       - run: |
-          python scripts/setup_scenario.py client_escalation optimized
-          docker compose up -d --build
+          SCENARIO=client_escalation VARIANT=optimized \
+            docker compose up -d --build
           python scripts/run_episode.py --scenario client_escalation --wait --json
 ```
 
@@ -403,7 +388,7 @@ docker compose logs -f openclaw-gateway
 # Tool call log from the mock server
 curl -s http://localhost:3001/tool_calls | python -m json.tool
 
-# Switch scenario without restarting
+# Switch scenario without restarting (run_episode.py does this automatically)
 curl -s -X POST http://localhost:3001/set_scenario/inbox_triage
 
 # Test a tool manually
@@ -435,11 +420,13 @@ clawbench/
 │       ├── USER.md
 │       ├── AGENTS.md.baseline
 │       └── AGENTS.md.optimized
+├── config/
+│   └── openclaw.json           # Static OpenClaw config (all tools allowed)
 ├── clawbench/
 │   ├── mock_tools/server.py    # FastAPI mock server
 │   └── scoring.py              # Regex-based scoring engine
 ├── scripts/
-│   ├── setup_scenario.py       # Generate OpenClaw config + workspace
+│   ├── init_workspace.py       # Docker init container entrypoint
 │   ├── run_episode.py          # Run one episode and collect results
 │   ├── run_batch.py            # Run all scenarios
 │   ├── test_handlers.py        # Layer 1: handler unit tests
@@ -447,8 +434,9 @@ clawbench/
 │   ├── test_mock_tools.py      # Layer 3: HTTP tests
 │   └── test_full.sh            # Run all test layers
 ├── openclaw-plugin/            # OpenClaw plugin (tool registration)
-├── generated/                  # Auto-generated config (gitignored)
 ├── workspace/                  # Mounted into OpenClaw container
+├── Dockerfile.init             # Init container (workspace setup)
+├── Dockerfile.mock-tools       # Mock tools server
 └── docker-compose.yml
 ```
 
@@ -464,6 +452,8 @@ clawbench/
 | `OPENAI_API_KEY` | Yes* | — | OpenAI API key |
 | `OPENCLAW_GATEWAY_TOKEN` | No | `sandbox-token-12345` | Gateway auth token |
 | `OPENCLAW_PORT` | No | `18790` | Host port for OpenClaw |
+| `SCENARIO` | No | `client_escalation` | Scenario to run |
+| `VARIANT` | No | `optimized` | AGENTS.md variant (`baseline` or `optimized`) |
 
 *At least one API key required for live episodes. Mock tool tests run without any keys.
 
@@ -474,34 +464,12 @@ clawbench/
 git clone https://github.com/trajectoryRL/openclaw.git
 git clone https://github.com/trajectoryRL/clawbench.git
 
-# Install Python dependencies
-cd clawbench
-pip install -r requirements.txt
-
-# Docker (for full integration)
+# Docker (required for full integration)
 docker compose version  # needs Docker Compose v2
+
+# Python (only needed for offline tests and run_episode.py)
+pip install -r requirements.txt
 ```
-
----
-
-## Landscape
-
-How this compares to other agent evaluation approaches:
-
-| Approach | Deterministic | OpenClaw-native | No LLM judge | A/B testing | Trajectory scoring |
-|----------|:------------:|:---------------:|:------------:|:-----------:|:-----------------:|
-| **This project** | Yes | Yes | Yes | Yes | Yes |
-| LLM-as-judge (manual) | No | — | No | — | No |
-| AgentBench | Yes | No | Mixed | No | Yes |
-| ToolSandbox (Apple) | Yes | No | Mixed | No | Yes |
-| LangChain AgentEvals | No | No | No | No | Yes |
-| DeepEval | No | No | No | No | Partial |
-
-Key differentiators:
-- **Only framework using real OpenClaw tool schemas** — agent learns the real interface, not a test double
-- **Regex scoring** — zero inference cost, instant feedback, no variance between runs
-- **AGENTS.md A/B testing** — change one line in your agent instructions, see exactly what improved
-- **RL-compatible reward signal** — normalized `[0, 1]` scores feed directly into optimization loops
 
 ---
 

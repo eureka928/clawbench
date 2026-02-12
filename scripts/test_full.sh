@@ -192,14 +192,10 @@ if [ "$QUICK" = false ]; then
             echo -e "${YELLOW}Skipping Docker layer: no API key in .env${NC}"
             LAYER_RESULTS+=("SKIP:4-docker")
         else
-            # Setup scenario
-            echo "Setting up scenario: $SCENARIO ($VARIANT)"
-            python scripts/setup_scenario.py "$SCENARIO" "$VARIANT"
-
-            # Build and start
-            echo ""
+            # Build and start (init container handles workspace setup)
             echo "Building and starting Docker containers..."
-            if ! docker compose up --build -d 2>&1; then
+            echo "  Scenario: $SCENARIO ($VARIANT)"
+            if ! SCENARIO="$SCENARIO" VARIANT="$VARIANT" docker compose up --build -d 2>&1; then
                 echo -e "${RED}Docker compose up failed${NC}"
                 layer_fail "4-docker"
             else

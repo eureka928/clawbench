@@ -4,13 +4,29 @@
 #
 # Usage:
 #   1. cp .env.example .env && edit .env
-#   2. python scripts/setup_scenario.py inbox_triage baseline
-#   3. docker compose up --build
+#   2. docker compose up --build
 #
-# Or use the helper script:
-#   ./scripts/run.sh inbox_triage baseline
+# Override scenario/variant:
+#   SCENARIO=morning_brief VARIANT=baseline docker compose up --build
 
 services:
+  # ==========================================================================
+  # Init Container
+  # Copies the correct AGENTS.md variant and workspace files for the scenario.
+  # Runs once before other services start, then exits.
+  # ==========================================================================
+  init:
+    build:
+      context: .
+      dockerfile: Dockerfile.init
+    volumes:
+      - ./fixtures:/fixtures:ro
+      - ./scenarios:/scenarios:ro
+      - ./workspace:/workspace
+    environment:
+      - SCENARIO=${SCENARIO:-client_escalation}
+      - VARIANT=${VARIANT:-optimized}
+
   # ==========================================================================
   # Mock Tools Server
   # Serves deterministic tool responses from fixtures.
@@ -27,8 +43,11 @@ services:
       - ./logs:/logs
     environment:
       - FIXTURES_PATH=/fixtures
-      - SCENARIO=${SCENARIO:-inbox_triage}
+      - SCENARIO=${SCENARIO:-client_escalation}
       - LOG_PATH=/logs
+    depends_on:
+      init:
+        condition: service_completed_successfully
     networks:
       - sandbox-net
     healthcheck:
@@ -40,7 +59,7 @@ services:
   # ==========================================================================
   # OpenClaw Gateway (ClawBench Edition)
   # Built from ../openclaw with pre-configured settings.
-  # Tool allow-list is scenario-specific (generated/openclaw.json).
+  # Static config in config/openclaw.json (all tools allowed).
   # ==========================================================================
   openclaw-gateway:
     build:
@@ -49,10 +68,10 @@ services:
     ports:
       - "${OPENCLAW_PORT:-18790}:18789"
     volumes:
-      # Workspace with AGENTS.md (populated by setup_scenario.py)
+      # Workspace with AGENTS.md (populated by init container)
       - ./workspace:/workspace
-      # Scenario-specific OpenClaw config (overrides baked-in default)
-      - ./generated/openclaw.json:/home/node/.openclaw/openclaw.json:ro
+      # Static OpenClaw config (same for all scenarios)
+      - ./config/openclaw.json:/home/node/.openclaw/openclaw.json:ro
     env_file:
       - .env
     environment:
@@ -62,6 +81,8 @@ services:
     extra_hosts:
       - "host.docker.internal:host-gateway"
     depends_on:
+      init:
+        condition: service_completed_successfully
       mock-tools:
         condition: service_healthy
     networks:
