@@ -21,7 +21,7 @@ cd "$SANDBOX_DIR"
 
 # Handle --list flag
 if [ "$1" == "--list" ] || [ "$1" == "-l" ]; then
-    python scripts/setup_scenario.py --list
+    python scripts/run_episode.py --list
     exit 0
 fi
 

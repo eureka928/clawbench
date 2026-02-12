@@ -99,7 +99,7 @@ All scenarios share the same universe: **Alex Chen**, Tech Lead at TechCorp, wit
 
 ```bash
 # List all available scenarios
-python scripts/setup_scenario.py --list
+python scripts/run_episode.py --list
 ```
 
 ### `client_escalation`
@@ -247,8 +247,8 @@ scoring:
 | `documents.json` | `exec` (curl notion pages) | Optional |
 | `memory/*.md` | `memory_search` / `memory_get` | Optional |
 | `USER.md` | `read` tool | Recommended |
-| `AGENTS.md.baseline` | Setup script | At least one variant |
-| `AGENTS.md.optimized` | Setup script | At least one variant |
+| `AGENTS.md.baseline` | Init container | At least one variant |
+| `AGENTS.md.optimized` | Init container | At least one variant |
 
 3. **Run it**:
 
@@ -388,7 +388,7 @@ docker compose logs -f openclaw-gateway
 # Tool call log from the mock server
 curl -s http://localhost:3001/tool_calls | python -m json.tool
 
-# Switch scenario without restarting
+# Switch scenario without restarting (run_episode.py does this automatically)
 curl -s -X POST http://localhost:3001/set_scenario/inbox_triage
 
 # Test a tool manually
@@ -427,7 +427,6 @@ clawbench/
 │   └── scoring.py              # Regex-based scoring engine
 ├── scripts/
 │   ├── init_workspace.py       # Docker init container entrypoint
-│   ├── setup_scenario.py       # Standalone setup (for batch/offline use)
 │   ├── run_episode.py          # Run one episode and collect results
 │   ├── run_batch.py            # Run all scenarios
 │   ├── test_handlers.py        # Layer 1: handler unit tests

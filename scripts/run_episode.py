@@ -14,6 +14,7 @@ Usage:
 import argparse
 import json
 import os
+import shutil
 import sys
 import time
 from pathlib import Path
@@ -26,6 +27,8 @@ import yaml
 # ---------------------------------------------------------------------------
 SANDBOX_DIR = Path(__file__).resolve().parent.parent
 SCENARIOS_DIR = SANDBOX_DIR / "scenarios"
+FIXTURES_DIR = SANDBOX_DIR / "fixtures"
+WORKSPACE_DIR = SANDBOX_DIR / "workspace"
 
 # ---------------------------------------------------------------------------
 # Configuration (env vars with defaults)
@@ -128,6 +131,34 @@ def reset_scenario(scenario: str) -> bool:
         return False
 
 
+def setup_workspace(scenario_config: dict, variant: str) -> bool:
+    """Copy AGENTS.md variant and workspace files for the scenario."""
+    scenario_name = scenario_config["name"]
+    fixture_dir = FIXTURES_DIR / scenario_name
+
+    variants = scenario_config.get("variants", {})
+    if variant not in variants:
+        print(f"  WARNING: Unknown variant '{variant}', available: {list(variants.keys())}")
+        return False
+
+    WORKSPACE_DIR.mkdir(parents=True, exist_ok=True)
+
+    agents_src = fixture_dir / variants[variant]
+    if agents_src.exists():
+        shutil.copy2(agents_src, WORKSPACE_DIR / "AGENTS.md")
+        print(f"  Copied {agents_src.name} -> workspace/AGENTS.md")
+    else:
+        print(f"  WARNING: {agents_src} not found")
+        return False
+
+    for dest_name, src_name in scenario_config.get("workspace", {}).items():
+        src = fixture_dir / src_name
+        if src.exists():
+            shutil.copy2(src, WORKSPACE_DIR / dest_name)
+
+    return True
+
+
 def run_episode(message: str, scenario: str = "inbox_triage") -> dict:
     """Run a complete episode and return results."""
 
@@ -178,6 +209,8 @@ def main():
     parser = argparse.ArgumentParser(description="Run an episode against the OpenClaw sandbox")
     parser.add_argument("--scenario", "-s", type=str, default="inbox_triage",
                         help="Scenario name (must have a YAML config in scenarios/)")
+    parser.add_argument("--variant", "-v", type=str, default="optimized",
+                        help="AGENTS.md variant (default: optimized)")
     parser.add_argument("--message", "-m", type=str, default=None,
                         help="Message to send (overrides scenario default prompt)")
     parser.add_argument("--wait", "-w", action="store_true",
@@ -211,6 +244,10 @@ def main():
         print(f"  Tools: {', '.join(scenario_config.get('tools', []))}")
 
     message = args.message or default_prompt
+
+    # Setup workspace files for this scenario/variant
+    if scenario_config:
+        setup_workspace(scenario_config, args.variant)
 
     if args.wait:
         if not wait_for_services():

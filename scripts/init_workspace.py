@@ -6,8 +6,8 @@ Reads SCENARIO and VARIANT from environment variables, loads the scenario
 YAML, and copies the correct AGENTS.md variant + workspace files into the
 shared /workspace volume.
 
-This replaces the workspace-setup portion of setup_scenario.py for Docker
-use, eliminating the need to run Python on the host before docker compose up.
+Reads scenario YAML and copies the correct workspace files into the shared
+volume, eliminating the need to run Python on the host before docker compose up.
 """
 
 import os
