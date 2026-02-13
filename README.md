@@ -433,7 +433,6 @@ clawbench/
 │   ├── test_scoring.py         # Layer 2: scoring tests
 │   ├── test_mock_tools.py      # Layer 3: HTTP tests
 │   └── test_full.sh            # Run all test layers
-├── openclaw-plugin/            # OpenClaw plugin (tool registration)
 ├── workspace/                  # Mounted into OpenClaw container
 ├── Dockerfile.init             # Init container (workspace setup)
 ├── Dockerfile.mock-tools       # Mock tools server
