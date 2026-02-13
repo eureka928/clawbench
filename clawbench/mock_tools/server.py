@@ -560,35 +560,6 @@ TOOL_HANDLERS: dict[str, Any] = {
     "read": handle_read,
 }
 
-# Legacy tool name aliases (for backward compatibility during migration)
-LEGACY_ALIASES: dict[str, str] = {
-    "inbox.list": "exec",
-    "email.read": "exec",
-    "email.draft": "exec",
-    "email.send": "exec",
-    "email.archive": "exec",
-    "calendar.read": "exec",
-    "calendar.create": "exec",
-    "calendar.update": "exec",
-    "calendar.delete": "exec",
-    "slack.list_channels": "slack",
-    "slack.read_messages": "slack",
-    "slack.post_message": "slack",
-    "slack.send_dm": "slack",
-    "task.list": "exec",
-    "task.get": "exec",
-    "task.create": "exec",
-    "task.update": "exec",
-    "doc.list": "exec",
-    "doc.read": "exec",
-    "doc.create": "exec",
-    "contacts.list": "read",
-    "contacts.get": "read",
-    "memory.read": "memory_get",
-    "memory.write": "memory_get",
-    "search.web": "web_search",
-}
-
 
 # ============================================================================
 # Middleware — log every POST /tools/* request
@@ -657,18 +628,11 @@ async def handle_tool(tool_name: str, request: Request):
     # Find handler
     handler = TOOL_HANDLERS.get(tool_name)
     if not handler:
-        # Try legacy alias
-        alias = LEGACY_ALIASES.get(tool_name)
-        if alias:
-            handler = TOOL_HANDLERS.get(alias)
-            logger.info("LEGACY ALIAS %s -> %s", tool_name, alias)
-        else:
-            raise HTTPException(
-                404,
-                f"Unknown tool: {tool_name}. "
-                f"Known tools: {sorted(TOOL_HANDLERS.keys())}. "
-                f"Legacy aliases: {sorted(LEGACY_ALIASES.keys())}",
-            )
+        raise HTTPException(
+            404,
+            f"Unknown tool: {tool_name}. "
+            f"Known tools: {sorted(TOOL_HANDLERS.keys())}.",
+        )
 
     result = handler(data)
     log_tool_call(tool_name, data, result)
@@ -725,7 +689,6 @@ async def list_tools():
     return {
         "tools": sorted(TOOL_HANDLERS.keys()),
         "count": len(TOOL_HANDLERS),
-        "legacy_aliases": sorted(LEGACY_ALIASES.keys()),
     }
 
 
