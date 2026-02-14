@@ -17,6 +17,7 @@ Architecture:
   - Adding a new fixture = drop a JSON file in fixtures/{scenario}/
 """
 
+import asyncio
 import json
 import logging
 import os
@@ -44,13 +45,65 @@ app = FastAPI(title="ClawBench — Mock Tools Server (Corrected Schema)")
 
 FIXTURES_PATH = Path(os.getenv("FIXTURES_PATH", "./fixtures"))
 LOG_PATH = Path(os.getenv("LOG_PATH", "./logs"))
-CURRENT_SCENARIO = os.getenv("SCENARIO", "inbox_triage")
 
 LOG_PATH.mkdir(parents=True, exist_ok=True)
 
-# In-memory logs (reset per scenario)
-tool_calls: list[dict] = []
-all_requests: list[dict] = []
+
+# ---------------------------------------------------------------------------
+# Scenario state — replaces module-level globals with a locked container
+# ---------------------------------------------------------------------------
+class ScenarioState:
+    """Thread-safe container for per-scenario mutable state."""
+
+    def __init__(self, scenario: str):
+        self.scenario = scenario
+        self.tool_calls: list[dict] = []
+        self.all_requests: list[dict] = []
+        self._lock = asyncio.Lock()
+        self._log_lock = asyncio.Lock()
+
+    async def reset(self, scenario: str):
+        async with self._lock:
+            self.scenario = scenario
+            self.tool_calls.clear()
+            self.all_requests.clear()
+            logger.info("Scenario reset to: %s", scenario)
+
+    async def add_tool_call(self, entry: dict):
+        async with self._lock:
+            self.tool_calls.append(entry)
+        await self._write_log(f"{self.scenario}_calls.jsonl", entry)
+
+    async def add_request(self, entry: dict):
+        async with self._lock:
+            self.all_requests.append(entry)
+        await self._write_log(f"{self.scenario}_all_requests.jsonl", entry)
+
+    async def get_tool_calls(self) -> list[dict]:
+        async with self._lock:
+            return list(self.tool_calls)
+
+    async def get_all_requests(self) -> dict:
+        async with self._lock:
+            requests = list(self.all_requests)
+        return {
+            "requests": requests,
+            "summary": {
+                "total": len(requests),
+                "success": sum(1 for r in requests if r["success"]),
+                "failed": sum(1 for r in requests if not r["success"]),
+            },
+        }
+
+    async def _write_log(self, filename: str, entry: dict):
+        """Append a JSON line to a log file under lock."""
+        async with self._log_lock:
+            log_file = LOG_PATH / filename
+            with open(log_file, "a") as f:
+                f.write(json.dumps(entry) + "\n")
+
+
+state = ScenarioState(os.getenv("SCENARIO", "inbox_triage"))
 
 
 # ============================================================================
@@ -66,21 +119,6 @@ def load_fixture(scenario: str, filename: str) -> Any | None:
         return json.load(f)
 
 
-def log_tool_call(tool: str, args: dict, result: Any):
-    """Log a successful tool call for later analysis."""
-    entry = {
-        "ts": datetime.now(timezone.utc).isoformat(),
-        "tool": tool,
-        "args": args,
-        "result_summary": str(result)[:200],
-    }
-    tool_calls.append(entry)
-
-    log_file = LOG_PATH / f"{CURRENT_SCENARIO}_calls.jsonl"
-    with open(log_file, "a") as f:
-        f.write(json.dumps(entry) + "\n")
-
-
 # ============================================================================
 # Slack handler — single tool, dispatches on "action" param
 # ============================================================================
@@ -92,7 +130,7 @@ def handle_slack(data: dict) -> dict:
     if action == "readMessages":
         channel_id = data.get("channelId", data.get("to", ""))
         limit = data.get("limit", 50)
-        messages = load_fixture(CURRENT_SCENARIO, "slack_messages.json") or []
+        messages = load_fixture(state.scenario, "slack_messages.json") or []
         if channel_id:
             ch = channel_id.lstrip("#")
             messages = [
@@ -159,7 +197,7 @@ def handle_slack(data: dict) -> dict:
 
     elif action == "memberInfo":
         user_id = data.get("userId", "")
-        contacts = load_fixture(CURRENT_SCENARIO, "contacts.json") or []
+        contacts = load_fixture(state.scenario, "contacts.json") or []
         member = next(
             (c for c in contacts if c.get("slack_id") == user_id or c.get("id") == user_id),
             None,
@@ -202,7 +240,7 @@ def handle_exec(data: dict) -> dict:
 
     # List emails (both "himalaya envelope list" and "himalaya list")
     if re.search(r"himalaya\s+(envelope\s+)?list", cmd):
-        inbox = load_fixture(CURRENT_SCENARIO, "inbox.json") or []
+        inbox = load_fixture(state.scenario, "inbox.json") or []
         summaries = [
             {
                 "id": msg.get("id"),
@@ -219,7 +257,7 @@ def handle_exec(data: dict) -> dict:
     m = re.search(r"himalaya\s+message\s+read\s+['\"]?(\S+)", cmd)
     if m:
         msg_id = m.group(1).strip("'\"")
-        inbox = load_fixture(CURRENT_SCENARIO, "inbox.json") or []
+        inbox = load_fixture(state.scenario, "inbox.json") or []
         email = next((e for e in inbox if str(e.get("id")) == msg_id), None)
         if email:
             # Format like himalaya CLI output
@@ -249,7 +287,7 @@ def handle_exec(data: dict) -> dict:
 
     # Query a database (task list)
     if re.search(r"curl.*notion\.so/v1/databases/.*/query", cmd, re.IGNORECASE):
-        tasks = load_fixture(CURRENT_SCENARIO, "tasks.json") or []
+        tasks = load_fixture(state.scenario, "tasks.json") or []
         return _exec_success(json.dumps({"results": tasks}, indent=2))
 
     # Get a page (task/doc detail)
@@ -257,10 +295,10 @@ def handle_exec(data: dict) -> dict:
     if m2:
         page_id = m2.group(1)
         # Try tasks first, then documents
-        tasks = load_fixture(CURRENT_SCENARIO, "tasks.json") or []
+        tasks = load_fixture(state.scenario, "tasks.json") or []
         item = next((t for t in tasks if str(t.get("id")) == page_id), None)
         if not item:
-            docs = load_fixture(CURRENT_SCENARIO, "documents.json") or []
+            docs = load_fixture(state.scenario, "documents.json") or []
             item = next((d for d in docs if str(d.get("id")) == page_id), None)
         if item:
             return _exec_success(json.dumps(item, indent=2))
@@ -277,7 +315,7 @@ def handle_exec(data: dict) -> dict:
 
     # Query databases list
     if re.search(r"curl.*notion\.so/v1/databases\b", cmd, re.IGNORECASE):
-        docs = load_fixture(CURRENT_SCENARIO, "documents.json") or []
+        docs = load_fixture(state.scenario, "documents.json") or []
         return _exec_success(json.dumps({"results": docs}, indent=2))
 
     # -- Google Calendar API (via curl) -------------------------------------
@@ -296,14 +334,14 @@ def handle_exec(data: dict) -> dict:
         if re.search(r"-X\s*PATCH|-X\s*PUT", cmd):
             return _exec_success(json.dumps({"status": "updated"}, indent=2))
         # Default: GET (list events)
-        events = load_fixture(CURRENT_SCENARIO, "calendar.json") or []
+        events = load_fixture(state.scenario, "calendar.json") or []
         return _exec_success(json.dumps({"items": events}, indent=2))
 
     # -- gcalcli / gcal CLI (calendar via CLI) ------------------------------
 
     # List / agenda
     if re.search(r"gcalcli\s+(agenda|list|search)|gcal\s+list-events", cmd, re.IGNORECASE):
-        events = load_fixture(CURRENT_SCENARIO, "calendar.json") or []
+        events = load_fixture(state.scenario, "calendar.json") or []
         return _exec_success(json.dumps({"items": events}, indent=2))
 
     # Create event
@@ -359,7 +397,7 @@ def handle_memory_search(data: dict) -> dict:
     max_results = data.get("maxResults", 5)
     results = []
 
-    memory_dir = FIXTURES_PATH / CURRENT_SCENARIO / "memory"
+    memory_dir = FIXTURES_PATH / state.scenario / "memory"
     if memory_dir.exists():
         for fpath in sorted(memory_dir.iterdir()):
             if fpath.is_file():
@@ -386,7 +424,7 @@ def handle_memory_search(data: dict) -> dict:
                 break
 
     # Also search MEMORY.md if it exists
-    mem_md = FIXTURES_PATH / CURRENT_SCENARIO / "MEMORY.md"
+    mem_md = FIXTURES_PATH / state.scenario / "MEMORY.md"
     if mem_md.exists() and len(results) < max_results:
         content = mem_md.read_text()
         lines = content.split("\n")
@@ -421,9 +459,9 @@ def handle_memory_get(data: dict) -> dict:
 
     try:
         # Try memory subdirectory first
-        fpath = FIXTURES_PATH / CURRENT_SCENARIO / req_path
+        fpath = FIXTURES_PATH / state.scenario / req_path
         if not fpath.exists():
-            fpath = FIXTURES_PATH / CURRENT_SCENARIO / "memory" / req_path
+            fpath = FIXTURES_PATH / state.scenario / "memory" / req_path
         if fpath.exists():
             content = fpath.read_text()
             lines = content.split("\n")
@@ -445,7 +483,7 @@ def handle_web_search(data: dict) -> dict:
     query = data.get("query", "")
     count = data.get("count", 5)
 
-    results = load_fixture(CURRENT_SCENARIO, "web_search_results.json")
+    results = load_fixture(state.scenario, "web_search_results.json")
     if results:
         if isinstance(results, dict) and query in results:
             items = results[query][:count]
@@ -484,7 +522,7 @@ def handle_web_fetch(data: dict) -> dict:
     url = data.get("url", "")
     extract_mode = data.get("extractMode", "markdown")
 
-    results = load_fixture(CURRENT_SCENARIO, "web_pages.json")
+    results = load_fixture(state.scenario, "web_pages.json")
     if results and isinstance(results, dict) and url in results:
         page = results[url]
         return {
@@ -528,8 +566,8 @@ def handle_read(data: dict) -> dict:
 
     # Try direct path in fixture dir
     for candidate in [
-        FIXTURES_PATH / CURRENT_SCENARIO / req_path,
-        FIXTURES_PATH / CURRENT_SCENARIO / os.path.basename(req_path),
+        FIXTURES_PATH / state.scenario / req_path,
+        FIXTURES_PATH / state.scenario / os.path.basename(req_path),
     ]:
         if candidate.exists() and candidate.is_file():
             content = candidate.read_text()
@@ -593,11 +631,7 @@ async def log_all_requests_middleware(request: Request, call_next):
             "status_code": response.status_code,
             "success": 200 <= response.status_code < 300,
         }
-        all_requests.append(entry)
-
-        debug_log = LOG_PATH / f"{CURRENT_SCENARIO}_all_requests.jsonl"
-        with open(debug_log, "a") as f:
-            f.write(json.dumps(entry) + "\n")
+        await state.add_request(entry)
 
         if response.status_code >= 400:
             logger.warning(
@@ -614,8 +648,6 @@ async def log_all_requests_middleware(request: Request, call_next):
 @app.post("/tools/{tool_name:path}")
 async def handle_tool(tool_name: str, request: Request):
     """Generic handler — dispatches tool calls to the correct handler."""
-    global CURRENT_SCENARIO
-
     # Parse body
     body = await request.body()
     try:
@@ -635,7 +667,15 @@ async def handle_tool(tool_name: str, request: Request):
         )
 
     result = handler(data)
-    log_tool_call(tool_name, data, result)
+
+    entry = {
+        "ts": datetime.now(timezone.utc).isoformat(),
+        "tool": tool_name,
+        "args": data,
+        "result_summary": str(result)[:200],
+    }
+    await state.add_tool_call(entry)
+
     return JSONResponse(content=result)
 
 
@@ -647,7 +687,7 @@ async def handle_tool(tool_name: str, request: Request):
 async def health():
     return {
         "status": "ok",
-        "scenario": CURRENT_SCENARIO,
+        "scenario": state.scenario,
         "tools_available": len(TOOL_HANDLERS),
         "tool_names": sorted(TOOL_HANDLERS.keys()),
     }
@@ -656,31 +696,21 @@ async def health():
 @app.post("/set_scenario/{scenario}")
 async def set_scenario(scenario: str):
     """Set the current scenario (switches fixture directory)."""
-    global CURRENT_SCENARIO
-    CURRENT_SCENARIO = scenario
-    tool_calls.clear()
-    all_requests.clear()
-    logger.info("Scenario reset to: %s", scenario)
-    return {"scenario": CURRENT_SCENARIO}
+    await state.reset(scenario)
+    return {"scenario": state.scenario}
 
 
 @app.get("/tool_calls")
 async def get_tool_calls():
     """Successful tool calls in this session."""
-    return {"calls": tool_calls}
+    calls = await state.get_tool_calls()
+    return {"calls": calls}
 
 
 @app.get("/all_requests")
 async def get_all_requests():
     """ALL requests including failures — for debugging."""
-    return {
-        "requests": all_requests,
-        "summary": {
-            "total": len(all_requests),
-            "success": sum(1 for r in all_requests if r["success"]),
-            "failed": sum(1 for r in all_requests if not r["success"]),
-        },
-    }
+    return await state.get_all_requests()
 
 
 @app.get("/tools")
