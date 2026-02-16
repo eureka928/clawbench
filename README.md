@@ -451,6 +451,7 @@ clawbench/
 | `OPENAI_API_KEY` | Yes* | — | OpenAI API key |
 | `OPENCLAW_GATEWAY_TOKEN` | No | `sandbox-token-12345` | Gateway auth token |
 | `OPENCLAW_PORT` | No | `18790` | Host port for OpenClaw |
+| `CLAWBENCH_MODEL` | No | `anthropic/claude-sonnet-4-5-20250929` | LLM model (`provider/model`) |
 | `SCENARIO` | No | `client_escalation` | Scenario to run |
 | `VARIANT` | No | `optimized` | AGENTS.md variant (`baseline` or `optimized`) |
 
@@ -469,6 +470,60 @@ docker compose version  # needs Docker Compose v2
 # Python (only needed for offline tests and run_episode.py)
 pip install -r requirements.txt
 ```
+
+---
+
+## Model Configuration
+
+All ClawBench scripts read the `CLAWBENCH_MODEL` env var. Set it once, everything uses it.
+
+### Cloud (default — Anthropic)
+
+```bash
+# .env
+CLAWBENCH_MODEL=anthropic/claude-sonnet-4-5-20250929
+ANTHROPIC_API_KEY=sk-ant-...
+```
+
+### Local LLM (Ollama)
+
+```bash
+# 1. Pull and serve
+ollama pull llama3.3 && ollama serve
+
+# 2. Set model in .env
+CLAWBENCH_MODEL=ollama/llama3.3
+
+# 3. Add Ollama provider to config/openclaw.json.template (after the "agents" block):
+#
+#   "models": {
+#     "providers": {
+#       "ollama": {
+#         "baseUrl": "http://host.docker.internal:11434",
+#         "api": "ollama"
+#       }
+#     }
+#   }
+
+# 4. Run as usual
+docker compose up --build
+```
+
+### Other providers
+
+| Provider | `CLAWBENCH_MODEL` | API key env var |
+|----------|-------------------|-----------------|
+| Anthropic | `anthropic/claude-sonnet-4-5-20250929` | `ANTHROPIC_API_KEY` |
+| OpenAI | `openai/gpt-4o` | `OPENAI_API_KEY` |
+| Ollama (local) | `ollama/llama3.3` | `OLLAMA_API_KEY=ollama-local` |
+| vLLM (local) | `vllm/deepseek-r1` | `VLLM_API_KEY=vllm-local` |
+| LiteLLM | `litellm/claude-opus-4-6` | `LITELLM_API_KEY` |
+
+The model is set in two places automatically:
+1. **API payload** — Python scripts read `CLAWBENCH_MODEL` and send it in `/v1/chat/completions` requests
+2. **OpenClaw config** — The init container generates `config/openclaw.json` from `config/openclaw.json.template`, replacing `${CLAWBENCH_MODEL}` with the env var value
+
+For providers other than Anthropic/OpenAI, you also need to add the provider config to `config/openclaw.json.template` (see [OpenClaw model providers](https://docs.openclaw.ai/concepts/model-providers) for the full schema).
 
 ---
 

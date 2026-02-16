@@ -23,6 +23,7 @@ console = Console()
 SANDBOX_DIR = Path(__file__).resolve().parent.parent
 SCENARIOS_DIR = SANDBOX_DIR / "scenarios"
 FIXTURES_DIR = SANDBOX_DIR / "fixtures"
+CLAWBENCH_MODEL = os.getenv("CLAWBENCH_MODEL", "anthropic/claude-sonnet-4-5-20250929")
 
 
 def _load_scenario(name_or_path: str) -> dict:
@@ -74,7 +75,7 @@ def run(
             f"{openclaw_url}/v1/chat/completions",
             headers={"Authorization": f"Bearer {token}", "Content-Type": "application/json"},
             json={
-                "model": "anthropic/claude-sonnet-4-5-20250929",
+                "model": CLAWBENCH_MODEL,
                 "messages": [{"role": "user", "content": prompt}],
                 "stream": False,
             },

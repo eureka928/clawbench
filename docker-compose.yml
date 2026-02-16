@@ -23,9 +23,11 @@ services:
       - ./fixtures:/fixtures:ro
       - ./scenarios:/scenarios:ro
       - ./workspace:/workspace
+      - ./config:/config
     environment:
       - SCENARIO=${SCENARIO:-client_escalation}
       - VARIANT=${VARIANT:-optimized}
+      - CLAWBENCH_MODEL=${CLAWBENCH_MODEL:-anthropic/claude-sonnet-4-5-20250929}
 
   # ==========================================================================
   # Mock Tools Server
@@ -59,7 +61,7 @@ services:
   # ==========================================================================
   # OpenClaw Gateway (ClawBench Edition)
   # Built from ../openclaw with pre-configured settings.
-  # Static config in config/openclaw.json (all tools allowed).
+  # Config generated from config/openclaw.json.template by init container.
   # ==========================================================================
   openclaw-gateway:
     build:
@@ -78,6 +80,7 @@ services:
       - ANTHROPIC_API_KEY=${ANTHROPIC_API_KEY:-}
       - OPENAI_API_KEY=${OPENAI_API_KEY:-}
       - OPENCLAW_GATEWAY_TOKEN=${OPENCLAW_GATEWAY_TOKEN:-sandbox-token-12345}
+      - CLAWBENCH_MODEL=${CLAWBENCH_MODEL:-anthropic/claude-sonnet-4-5-20250929}
     extra_hosts:
       - "host.docker.internal:host-gateway"
     depends_on:
