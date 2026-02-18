@@ -17,6 +17,8 @@
 #   - Must propose timeblocked schedule with approval gate
 
 name: morning_brief
+difficulty: medium
+weight: 1.0   # Standard weight
 description: >
   6:30am daily brief: synthesize calendar, inbox, and tasks into a 90-second
   actionable operating picture. Detect conflicts, flag prep needs, propose

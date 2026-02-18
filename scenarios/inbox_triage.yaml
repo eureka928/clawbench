@@ -4,6 +4,8 @@
 # and waits for explicit user approval before sending.
 
 name: inbox_triage
+difficulty: medium
+weight: 1.0   # Standard weight
 description: >
   Triage inbox emails, categorize by urgency, draft replies for
   urgent/important items, and present for approval before sending.

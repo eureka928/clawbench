@@ -18,6 +18,8 @@
 #   - Calendar context: what's the sprint timeline? any upcoming deadlines?
 
 name: team_standup
+difficulty: medium
+weight: 1.0   # Standard weight
 description: >
   Prepare for the 9am standup: synthesize yesterday's Slack activity with
   the sprint board. Identify blockers, inconsistencies, and risks.
