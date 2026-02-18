@@ -4,7 +4,6 @@ CLI for ClawBench.
 Thin wrapper around the YAML-based scenario runner.
 """
 
-import json
 import os
 import sys
 from pathlib import Path
@@ -15,6 +14,10 @@ import yaml
 from rich.console import Console
 from rich.table import Table
 
+from .runner import (
+    reset_scenario, send_message, get_tool_calls,
+    DEFAULT_OPENCLAW_URL, DEFAULT_OPENCLAW_TOKEN, DEFAULT_MOCK_TOOLS_URL,
+)
 from .scoring import score_episode, format_score_summary, validate_scenario
 
 app = typer.Typer(help="ClawBench - Evaluate AGENTS.md policies")
@@ -56,9 +59,9 @@ def run(
     ),
 ):
     """Run a single scenario and print the score."""
-    openclaw_url = openclaw_url or os.getenv("OPENCLAW_URL", "http://localhost:18790")
-    mock_tools_url = mock_tools_url or os.getenv("MOCK_TOOLS_URL", "http://localhost:3001")
-    token = os.getenv("OPENCLAW_GATEWAY_TOKEN", "sandbox-token-12345")
+    openclaw_url = openclaw_url or os.getenv("OPENCLAW_URL", DEFAULT_OPENCLAW_URL)
+    mock_tools_url = mock_tools_url or os.getenv("MOCK_TOOLS_URL", DEFAULT_MOCK_TOOLS_URL)
+    token = os.getenv("OPENCLAW_GATEWAY_TOKEN", DEFAULT_OPENCLAW_TOKEN)
 
     sc = _load_scenario(scenario)
     name = sc["name"]
@@ -68,27 +71,14 @@ def run(
     console.print(f"  Prompt: {prompt[:80]}...")
 
     # Set mock scenario
-    try:
-        httpx.post(f"{mock_tools_url}/set_scenario/{name}", timeout=5)
-    except httpx.RequestError as e:
-        console.print(f"[red]Mock server unreachable:[/red] {e}")
+    if not reset_scenario(mock_tools_url, name):
+        console.print(f"[red]Mock server unreachable or reset failed[/red]")
         raise typer.Exit(1)
 
     # Send message
-    try:
-        resp = httpx.post(
-            f"{openclaw_url}/v1/chat/completions",
-            headers={"Authorization": f"Bearer {token}", "Content-Type": "application/json"},
-            json={
-                "model": CLAWBENCH_MODEL,
-                "messages": [{"role": "user", "content": prompt}],
-                "stream": False,
-            },
-            timeout=180,
-        )
-        raw = resp.json()
-    except httpx.RequestError as e:
-        console.print(f"[red]OpenClaw unreachable:[/red] {e}")
+    raw = send_message(openclaw_url, token, prompt, model=CLAWBENCH_MODEL)
+    if "error" in raw:
+        console.print(f"[red]OpenClaw error:[/red] {raw['error']}")
         raise typer.Exit(1)
 
     # Extract response
@@ -97,13 +87,7 @@ def run(
         assistant_message = raw["choices"][0].get("message", {}).get("content", "")
 
     # Collect tool calls
-    tool_calls = []
-    try:
-        r = httpx.get(f"{mock_tools_url}/tool_calls", timeout=5)
-        if r.status_code == 200:
-            tool_calls = r.json().get("calls", [])
-    except httpx.RequestError:
-        pass
+    tool_calls = get_tool_calls(mock_tools_url)
 
     tool_counts: dict[str, int] = {}
     for tc in tool_calls:
@@ -159,8 +143,8 @@ def check_health(
     mock_tools_url: str = typer.Option(None, envvar="MOCK_TOOLS_URL", help="Mock tools server URL"),
 ):
     """Check if services are running."""
-    openclaw_url = openclaw_url or os.getenv("OPENCLAW_URL", "http://localhost:18790")
-    mock_tools_url = mock_tools_url or os.getenv("MOCK_TOOLS_URL", "http://localhost:3001")
+    openclaw_url = openclaw_url or os.getenv("OPENCLAW_URL", DEFAULT_OPENCLAW_URL)
+    mock_tools_url = mock_tools_url or os.getenv("MOCK_TOOLS_URL", DEFAULT_MOCK_TOOLS_URL)
 
     console.print("[bold]Health Check[/bold]")
 

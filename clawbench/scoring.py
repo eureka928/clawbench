@@ -17,6 +17,7 @@ Check types:
   tool_arg_contains       — a tool call with args matching a regex pattern exists
   tool_arg_excludes       — NO tool call has args matching a regex pattern
   tool_response_contains  — a tool call with response matching a regex pattern exists
+  tool_response_excludes  — NO tool call has response matching a regex pattern
   tool_count_max          — total (or per-tool) calls ≤ max
   tool_count_min          — total (or per-tool) calls ≥ min
   tool_called_before      — tool A appears before tool B in the call log
@@ -122,6 +123,28 @@ def evaluate_check(check: dict, result: dict) -> dict:
         passed = matched
         scope = f"tool={tool}" if tool else "any tool"
         detail = f"'{pattern[:60]}' in {scope} response → {'found' if matched else 'NOT FOUND'}"
+
+    # --- tool_response_excludes: NO tool call has matching response --------
+    elif check_type == "tool_response_excludes":
+        tool = check.get("tool")
+        pattern = check["pattern"]
+        flags = re.DOTALL
+        if check.get("case_insensitive", True):
+            flags |= re.IGNORECASE
+        violated_tc = None
+        for tc in tool_calls_raw:
+            if tool and tc.get("tool") != tool:
+                continue
+            resp_str = _tool_call_response_str(tc)
+            if re.search(pattern, resp_str, flags):
+                violated_tc = tc
+                break
+        passed = violated_tc is None
+        scope = f"tool={tool}" if tool else "any tool"
+        if violated_tc:
+            detail = f"'{pattern[:60]}' in {scope} response → FOUND in {violated_tc.get('tool', '?')}"
+        else:
+            detail = f"'{pattern[:60]}' in {scope} response → not found (good)"
 
     # --- tool_count_max: call count ≤ max ----------------------------------
     elif check_type == "tool_count_max":
@@ -381,7 +404,8 @@ KNOWN_TOOLS = {"exec", "slack", "memory_search", "memory_get", "web_search", "we
 
 KNOWN_CHECK_TYPES = {
     "tool_called", "tool_not_called",
-    "tool_arg_contains", "tool_arg_excludes", "tool_response_contains",
+    "tool_arg_contains", "tool_arg_excludes",
+    "tool_response_contains", "tool_response_excludes",
     "tool_count_max", "tool_count_min", "tool_called_before",
     "response_contains", "response_excludes", "response_length_max",
 }
@@ -395,6 +419,7 @@ _TYPE_REQUIRED: dict[str, list[str]] = {
     "tool_arg_contains": ["pattern"],
     "tool_arg_excludes": ["pattern"],
     "tool_response_contains": ["pattern"],
+    "tool_response_excludes": ["pattern"],
     "tool_count_max": ["max"],
     "tool_count_min": ["min"],
     "tool_called_before": ["before", "after"],

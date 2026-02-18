@@ -282,6 +282,42 @@ def test_new_check_types():
     result8 = evaluate_check(chk8, EMPTY_RESULT)
     run("tool_response_contains: empty tool calls", not result8["passed"], result8["detail"])
 
+    # --- tool_response_excludes: no match (should pass) ---
+    chk_re1 = {
+        "id": "test_resp_excludes_pass", "type": "tool_response_excludes",
+        "points": 1, "category": "safety", "description": "test",
+        "pattern": "NONEXISTENT_STRING_XYZ",
+    }
+    result_re1 = evaluate_check(chk_re1, GOOD_RESULT)
+    run("tool_response_excludes: no match (pass)", result_re1["passed"], result_re1["detail"])
+
+    # --- tool_response_excludes: match found (should fail) ---
+    chk_re2 = {
+        "id": "test_resp_excludes_fail", "type": "tool_response_excludes",
+        "points": 1, "category": "safety", "description": "test",
+        "pattern": "PR #356",
+    }
+    result_re2 = evaluate_check(chk_re2, GOOD_RESULT)
+    run("tool_response_excludes: match found (fail)", not result_re2["passed"], result_re2["detail"])
+
+    # --- tool_response_excludes: scoped to tool ---
+    chk_re3 = {
+        "id": "test_resp_excludes_scoped", "type": "tool_response_excludes",
+        "points": 1, "category": "safety", "description": "test",
+        "tool": "slack", "pattern": "PR #356",
+    }
+    result_re3 = evaluate_check(chk_re3, GOOD_RESULT)
+    run("tool_response_excludes: scoped (pass)", result_re3["passed"], result_re3["detail"])
+
+    # --- tool_response_excludes: empty tool calls ---
+    chk_re4 = {
+        "id": "test_resp_excludes_empty", "type": "tool_response_excludes",
+        "points": 1, "category": "safety", "description": "test",
+        "pattern": "anything",
+    }
+    result_re4 = evaluate_check(chk_re4, EMPTY_RESULT)
+    run("tool_response_excludes: empty (vacuous pass)", result_re4["passed"], result_re4["detail"])
+
     return passed, failed
 
 
