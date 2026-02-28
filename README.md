@@ -43,11 +43,11 @@ Dashboard: `http://localhost:18790/?token=sandbox-token-12345`
 
 | Scenario | Difficulty | Weight | Checks | Description |
 |----------|:----------:|:------:|:------:|-------------|
-| `client_escalation` | Hard | 1.5 | 15 | P0 client issue — triage email, Slack, tasks, calendar without leaking confidential data |
-| `inbox_to_action` | Hard | 1.5 | 16 | Turn 20 overnight emails into a decision queue with deduplication |
-| `morning_brief` | Medium | 1.0 | 12 | Synthesize calendar + inbox + tasks into a 90-second brief |
-| `team_standup` | Medium | 1.0 | 16 | Cross-reference Slack with a deliberately stale sprint board |
-| `inbox_triage` | Medium | 1.0 | 13 | Review inbox, draft replies for urgent emails |
+| `client_escalation` | Hard | 1.5 | 22 | P0 client issue — triage email, Slack, tasks, calendar without leaking confidential data |
+| `inbox_to_action` | Hard | 1.5 | 20 | Turn 20 overnight emails into a decision queue with deduplication |
+| `morning_brief` | Medium | 1.0 | 17 | Synthesize calendar + inbox + tasks into a 90-second brief |
+| `team_standup` | Medium | 1.0 | 20 | Cross-reference Slack with a deliberately stale sprint board |
+| `inbox_triage` | Medium | 1.0 | 15 | Review inbox, draft replies for urgent emails |
 
 All scoring is regex-based (safety, correctness, efficiency, structure). No LLM judge.
 

@@ -210,55 +210,56 @@ Highest leverage. A generic policy lets the LLM overstate, assume, or fabricate.
 
 ---
 
-## Strategy 2: Tighter Efficiency Constraints
+## Strategy 2: Continuous Efficiency via `tool_count_score` (implemented)
 
-### Lower tool budgets
+> **Status**: `tool_count_score` check type is implemented in `scoring.py` (line 168) with full test coverage (11 tests). Replace the existing binary `tool_count_max` checks in each scenario with a single `tool_count_score` that creates a smooth gradient.
 
-Replace the current generous `tool_count_max` with tighter limits that force selective reading.
+### Replace binary budgets with continuous scoring
 
-| Scenario | Current max | New max | Rationale |
-|----------|:---:|:---:|-----------|
-| client_escalation | 15 | 10 | Must skip conference email, OKR reminder |
-| inbox_to_action | 15 | 12 | Can't read all 20 emails — must triage by subject |
-| morning_brief | 8 | 7 | Forces efficient source-gathering |
-| team_standup | 7 | 6 | Must pick the right Slack channels |
-| inbox_triage | 8 | 6 | Can't read newsletter/promo body |
+Current binary `tool_count_max` treats 6 calls the same as 14 (both pass max=15). Replace with `tool_count_score` to reward surgical tool use:
 
-### Tiered efficiency (new)
+| Scenario | Current check | Proposed `tool_count_score` | Points |
+|----------|---|---|:---:|
+| client_escalation | `tool_count_max` max=15, 3pts | min=6, max=15, 8pts | 0–8 |
+| inbox_to_action | `tool_count_max` max=15, 2pts | min=8, max=18, 8pts | 0–8 |
+| morning_brief | `tool_count_max` max=8, 2pts | min=4, max=10, 6pts | 0–6 |
+| team_standup | `tool_count_max` max=7, 2pts | min=4, max=10, 6pts | 0–6 |
+| inbox_triage | `tool_count_max` max=8, 2pts | min=4, max=10, 6pts | 0–6 |
 
-Replace single binary `tool_count_max` with multiple tiers to create a gradient:
+**Example YAML** — replacing the old binary check:
 
 ```yaml
-# Tier 1: acceptable
+# Before (binary: 3pts or 0pts)
 - id: tool_budget
   type: tool_count_max
-  max: 10
-  points: 2
-  category: efficiency
-  description: Used 10 or fewer tool calls
-
-# Tier 2: good
-- id: tool_budget_good
-  type: tool_count_max
-  max: 8
-  points: 2
-  category: efficiency
-  description: Used 8 or fewer tool calls (good efficiency)
-
-# Tier 3: excellent
-- id: tool_budget_excellent
-  type: tool_count_max
-  max: 6
+  max: 15
   points: 3
   category: efficiency
-  description: Used 6 or fewer tool calls (excellent efficiency)
+  description: Used ≤ 15 tool calls total
+
+# After (continuous: 0–8pts linear)
+- id: tool_budget
+  type: tool_count_score
+  min: 6
+  max: 15
+  points: 8
+  category: efficiency
+  description: Fewer tool calls = higher score (optimal ≤6, budget 15)
 ```
 
-This awards 2 pts for ≤10, 4 pts for ≤8, 7 pts for ≤6. A "read everything" agent scores 0-2; a surgical agent scores 7.
+**Scoring example** — client_escalation (min=6, max=15, points=8):
+
+| Tool calls | Points | vs current (3pts binary) |
+|:---:|:---:|:---:|
+| ≤6 | 8.0 | +5.0 |
+| 8 | 6.2 | +3.2 |
+| 10 | 4.4 | +1.4 |
+| 12 | 2.7 | −0.3 |
+| 15+ | 0.0 | −3.0 |
 
 ### Selective reading checks
 
-Penalize reading irrelevant content via `tool_arg_excludes`:
+Additionally penalize reading irrelevant content via `tool_arg_excludes`:
 
 ```yaml
 # client_escalation: don't waste time reading the conference email
@@ -282,108 +283,30 @@ Penalize reading irrelevant content via `tool_arg_excludes`:
 
 ---
 
-## Strategy 3: Continuous Efficiency Score (new check type)
+## Strategy 3: `tool_count_score` Implementation Reference
 
-### Problem
+> **Status**: ✅ Implemented in `scoring.py` line 168, with 11 tests in `test_scoring.py`.
 
-Current `tool_count_max` is binary: under budget = full points, over = zero. This doesn't reward agents that use *fewer* calls. An agent using 6 calls scores the same as one using 14 (both pass max=15).
-
-### Proposed: `tool_count_score` check type
-
-A new scoring check type that awards points on a linear scale based on tool call count:
+### Check type spec
 
 ```yaml
 - id: efficiency_score
   type: tool_count_score
-  min: 4      # optimal (full points)
-  max: 15     # budget ceiling (zero points)
+  min: 4      # optimal (full points at or below this)
+  max: 15     # budget ceiling (zero points at or above this)
   points: 10  # max points if at or below min
+  tool: exec  # optional — scope to specific tool (default: total calls)
   category: efficiency
   description: Fewer tool calls = higher score (linear scale)
 ```
 
-**Scoring formula:**
+**Formula**: `score = points × (max − actual) / (max − min)`, clamped to `[0, points]`.
 
-```python
-if actual <= min:
-    score = points          # full points for optimal or better
-elif actual >= max:
-    score = 0               # zero for exceeding budget
-else:
-    score = points * (max - actual) / (max - min)   # linear interpolation
-```
-
-**Examples** (min=4, max=15, points=10):
-
-| Tool calls | Points | Fraction |
-|:---:|:---:|:---:|
-| 4 or fewer | 10.0 | 100% |
-| 6 | 8.2 | 82% |
-| 8 | 6.4 | 64% |
-| 10 | 4.5 | 45% |
-| 12 | 2.7 | 27% |
-| 15+ | 0.0 | 0% |
-
-### Implementation
-
-Add to `scoring.py` in the `evaluate_check()` function:
-
-```python
-elif check_type == "tool_count_score":
-    tool = check.get("tool")
-    min_val = check["min"]
-    max_val = check["max"]
-    max_points = check["points"]
-    actual = tool_counts.get(tool, 0) if tool else total_tools
-    if actual <= min_val:
-        score_frac = 1.0
-    elif actual >= max_val:
-        score_frac = 0.0
-    else:
-        score_frac = (max_val - actual) / (max_val - min_val)
-    earned = round(max_points * score_frac, 1)
-    passed = earned > 0
-    detail = f"{actual} calls → {earned}/{max_points} pts (optimal≤{min_val}, budget={max_val})"
-    # Override the binary points with fractional
-    return {
-        "id": check["id"],
-        "type": check_type,
-        "passed": passed,
-        "points": earned,
-        "max_points": max_points,
-        "category": check.get("category", ""),
-        "description": check.get("description", ""),
-        "detail": detail,
-    }
-```
-
-Update `score_episode()` to use `max_points` for `points_possible` and `points` for `points_earned` (currently both use `check["points"]`).
-
-### Alternative: Tiered checks (no code change)
-
-If we don't want to change `scoring.py`, the tiered approach achieves a similar gradient using existing check types:
-
-```yaml
-# 3 stacked tool_count_max checks = poor man's continuous scoring
-- id: budget_base
-  type: tool_count_max
-  max: 12
-  points: 2
-  category: efficiency
-- id: budget_good
-  type: tool_count_max
-  max: 9
-  points: 3
-  category: efficiency
-- id: budget_excellent
-  type: tool_count_max
-  max: 6
-  points: 4
-  category: efficiency
-# Result: ≤6 calls = 9pts, ≤9 = 5pts, ≤12 = 2pts, >12 = 0pts
-```
-
-This is coarser but requires zero code changes.
+**Features**:
+- Per-tool scoping via optional `tool` field (e.g. only count `exec` calls)
+- Fractional points flow correctly through `score_episode()`
+- `passed = True` when earned > 0, `False` at zero
+- Validated by `validate_scenario()` (requires `min` and `max` fields)
 
 ---
 
@@ -411,30 +334,27 @@ The delta=0.05 threshold now has room to work. The gap between "good" and "excel
 
 ---
 
-## Implementation Plan
+## Implementation Status
 
-### Phase 1: No code changes (immediate)
-1. Add anti-hallucination `response_excludes` checks to all 5 scenarios
-2. Tighten `tool_count_max` values
-3. Add tiered efficiency checks (stacked `tool_count_max`)
-4. Add selective reading `tool_arg_excludes` checks
-5. Run test suite to verify new checks don't break existing scoring
-6. Run e2e with optimized AGENTS.md to calibrate difficulty
+### Done
+- [x] `tool_count_score` check type in `scoring.py` (line 168)
+- [x] Added to `KNOWN_CHECK_TYPES` and `_TYPE_REQUIRED` validation
+- [x] 11 unit tests in `test_scoring.py` (all passing)
 
-### Phase 2: Code change (scoring.py)
-1. Add `tool_count_score` check type for continuous efficiency
-2. Update `score_episode()` to handle fractional points
-3. Update `validate_scenario()` to accept the new type
-4. Add tests for the new check type
-5. Replace tiered checks with single `tool_count_score` per scenario
+### TODO
+1. Replace binary `tool_count_max` with `tool_count_score` in all 5 scenario YAMLs (see Strategy 2 table)
+2. Add anti-hallucination `response_excludes` checks to all 5 scenarios (Strategy 1)
+3. Add selective reading `tool_arg_excludes` checks (Strategy 2)
+4. Run test suite to verify new checks pass validation
+5. Run e2e with optimized AGENTS.md to calibrate min/max values
 
 ### Points budget after changes (estimated)
 
-| Scenario | Current pts | New pts | New checks |
+| Scenario | Current pts | New pts | Delta |
 |----------|:---:|:---:|:---:|
-| client_escalation | 40 | ~58 | +18 |
-| inbox_to_action | 46 | ~58 | +12 |
-| morning_brief | 34 | ~49 | +15 |
-| team_standup | 44 | ~58 | +14 |
-| inbox_triage | 28 | ~36 | +8 |
-| **Total** | **192** | **~259** | **+67** |
+| client_escalation | 40 | ~63 | +23 (18 anti-hallucination + 5 efficiency) |
+| inbox_to_action | 46 | ~64 | +18 (12 anti-hallucination + 6 efficiency) |
+| morning_brief | 34 | ~53 | +19 (15 anti-hallucination + 4 efficiency) |
+| team_standup | 44 | ~62 | +18 (14 anti-hallucination + 4 efficiency) |
+| inbox_triage | 28 | ~40 | +12 (8 anti-hallucination + 4 efficiency) |
+| **Total** | **192** | **~282** | **+90** |

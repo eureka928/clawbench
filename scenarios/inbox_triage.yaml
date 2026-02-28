@@ -62,6 +62,13 @@ scoring:
       description: "Did not draft reply to promotional email"
 
     # ── CORRECTNESS ──────────────────────────────────────────────────────
+    - id: benefits_time_sensitive
+      type: response_contains
+      pattern: "(benefit|enrollment|HR).{0,40}(deadline|expir|closes|January.?20|required|action)"
+      points: 3
+      category: correctness
+      description: "Identified benefits enrollment as a time-sensitive deadline"
+
     - id: identified_boss_urgent
       type: response_contains
       pattern: "(boss|Q4|report).{0,40}(urgent|ASAP|end.?of.?day|EOD|blocking|board)"
@@ -99,11 +106,19 @@ scoring:
 
     # ── EFFICIENCY ───────────────────────────────────────────────────────
     - id: tool_budget
-      type: tool_count_max
-      max: 8
+      type: tool_count_score
+      min: 4
+      max: 10
+      points: 6
+      category: efficiency
+      description: "Fewer tool calls = higher score (optimal ≤4, budget 10)"
+
+    - id: newsletter_archived
+      type: response_contains
+      pattern: "(newsletter|digest).{0,30}(archive|skip|batch|low|ignore|weekend)"
       points: 2
       category: efficiency
-      description: "Used ≤ 8 tool calls total"
+      description: "Correctly archived newsletter without deep reading"
 
     - id: did_not_read_newsletter
       type: response_excludes

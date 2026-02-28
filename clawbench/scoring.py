@@ -20,6 +20,7 @@ Check types:
   tool_response_excludes  — NO tool call has response matching a regex pattern
   tool_count_max          — total (or per-tool) calls ≤ max
   tool_count_min          — total (or per-tool) calls ≥ min
+  tool_count_score        — linear score: fewer calls = more points (continuous)
   tool_called_before      — tool A appears before tool B in the call log
   response_contains       — regex found in response text
   response_excludes       — regex NOT found in response text
@@ -163,6 +164,33 @@ def evaluate_check(check: dict, result: dict) -> dict:
         passed = actual >= min_val
         label = tool or "total"
         detail = f"{label}={actual} (min {min_val})"
+
+    # --- tool_count_score: linear score — fewer calls = more points ---------
+    elif check_type == "tool_count_score":
+        tool = check.get("tool")
+        min_val = check["min"]   # optimal (full points at or below this)
+        max_val = check["max"]   # budget ceiling (zero points at or above this)
+        max_points = check["points"]
+        actual = tool_counts.get(tool, 0) if tool else total_tools
+        if actual <= min_val:
+            score_frac = 1.0
+        elif actual >= max_val:
+            score_frac = 0.0
+        else:
+            score_frac = (max_val - actual) / (max_val - min_val)
+        earned = round(max_points * score_frac, 1)
+        label = tool or "total"
+        detail = f"{label}={actual} → {earned}/{max_points} pts (optimal≤{min_val}, budget={max_val})"
+        return {
+            "id": check["id"],
+            "type": check_type,
+            "passed": earned > 0,
+            "points": earned,
+            "max_points": max_points,
+            "category": check.get("category", ""),
+            "description": check.get("description", ""),
+            "detail": detail,
+        }
 
     # --- tool_called_before: tool A before tool B in timeline --------------
     elif check_type == "tool_called_before":
@@ -406,7 +434,7 @@ KNOWN_CHECK_TYPES = {
     "tool_called", "tool_not_called",
     "tool_arg_contains", "tool_arg_excludes",
     "tool_response_contains", "tool_response_excludes",
-    "tool_count_max", "tool_count_min", "tool_called_before",
+    "tool_count_max", "tool_count_min", "tool_count_score", "tool_called_before",
     "response_contains", "response_excludes", "response_length_max",
 }
 
@@ -422,6 +450,7 @@ _TYPE_REQUIRED: dict[str, list[str]] = {
     "tool_response_excludes": ["pattern"],
     "tool_count_max": ["max"],
     "tool_count_min": ["min"],
+    "tool_count_score": ["min", "max"],
     "tool_called_before": ["before", "after"],
     "response_length_max": ["max"],
 }

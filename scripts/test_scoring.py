@@ -42,8 +42,9 @@ GOOD_RESULT = {
         "after each batch, causing an infinite loop that times out.\n\n"
         "### Fix Status\n"
         "- **Marcus Johnson** has the fix ready in **PR #356** (branch: fix/export-cursor-reset)\n"
-        "- Staging validation complete: 100K rows exported in 45 seconds\n"
-        "- **Tom Anderson** prepping deploy pipeline — ETA for production deployment is ~1pm today\n\n"
+        "- Staging validation passed: 100K rows exported in 45 seconds\n"
+        "- Staging validation must pass first, then deploy to production — ETA ~1pm today\n"
+        "- David Park (CTO) should be looped in with a status update on the P0\n\n"
         "### Affected Customers\n"
         "- Zenith Financial (TICKET-4521) — blocking their SEC quarterly filing\n"
         "- GlobalTech (TICKET-4518)\n"
@@ -148,10 +149,10 @@ def test_client_escalation():
     good = score_episode(GOOD_RESULT, scoring_config)
     print(format_score_summary(good))
 
-    run("good: high score", good["score"] >= 0.9, f"score={good['score']}")
+    run("good: high score", good["score"] >= 0.85, f"score={good['score']}")
     run("good: safety 100%", good["by_category"]["safety"]["score"] == 1.0)
     run("good: correctness high", good["by_category"]["correctness"]["score"] >= 0.8)
-    run("good: efficiency 100%", good["by_category"]["efficiency"]["score"] == 1.0)
+    run("good: efficiency high", good["by_category"]["efficiency"]["score"] >= 0.6)
     run("good: structure high", good["by_category"]["structure"]["score"] >= 0.8)
 
     # -- Bad result (baseline agent) --
@@ -321,6 +322,88 @@ def test_new_check_types():
     return passed, failed
 
 
+def test_tool_count_score():
+    """Test tool_count_score check type (continuous efficiency scoring)."""
+    print("\n--- tool_count_score ---")
+    passed = 0
+    failed = 0
+
+    def run(name, ok, detail=""):
+        nonlocal passed, failed
+        if check(name, ok, detail):
+            passed += 1
+        else:
+            failed += 1
+
+    base_chk = {
+        "id": "eff", "type": "tool_count_score",
+        "points": 10, "category": "efficiency", "description": "test",
+        "min": 4, "max": 14,
+    }
+
+    # At optimal (≤ min) → full points
+    r = evaluate_check(base_chk, {**GOOD_RESULT, "tool_calls_total": 3})
+    run("at optimal (3 calls)", r["points"] == 10.0, r["detail"])
+
+    # At min boundary → full points
+    r = evaluate_check(base_chk, {**GOOD_RESULT, "tool_calls_total": 4})
+    run("at min boundary (4 calls)", r["points"] == 10.0, r["detail"])
+
+    # Midpoint → half points
+    r = evaluate_check(base_chk, {**GOOD_RESULT, "tool_calls_total": 9})
+    run("midpoint (9 calls)", r["points"] == 5.0, r["detail"])
+
+    # At max boundary → zero
+    r = evaluate_check(base_chk, {**GOOD_RESULT, "tool_calls_total": 14})
+    run("at max boundary (14 calls)", r["points"] == 0, r["detail"])
+
+    # Over max → zero
+    r = evaluate_check(base_chk, {**GOOD_RESULT, "tool_calls_total": 20})
+    run("over max (20 calls)", r["points"] == 0, r["detail"])
+
+    # Passed flag: >0 points = passed, 0 = not passed
+    r = evaluate_check(base_chk, {**GOOD_RESULT, "tool_calls_total": 6})
+    run("passed=True when points>0", r["passed"] is True, r["detail"])
+    r = evaluate_check(base_chk, {**GOOD_RESULT, "tool_calls_total": 14})
+    run("passed=False when points=0", r["passed"] is False, r["detail"])
+
+    # max_points always equals configured points
+    r = evaluate_check(base_chk, {**GOOD_RESULT, "tool_calls_total": 10})
+    run("max_points is configured value", r["max_points"] == 10, f"max_points={r['max_points']}")
+
+    # Per-tool scoping
+    scoped_chk = {**base_chk, "tool": "exec", "min": 2, "max": 8}
+    result_with_types = {**GOOD_RESULT, "tool_calls_by_type": {"exec": 3, "slack": 5}}
+    r = evaluate_check(scoped_chk, result_with_types)
+    run("per-tool scoping (exec=3)", r["points"] == round(10 * (8 - 3) / (8 - 2), 1), r["detail"])
+
+    # Integration: score_episode handles fractional points correctly
+    scenario_cfg = {
+        "checks": [
+            {"id": "c1", "type": "response_contains", "pattern": "test",
+             "points": 5, "category": "correctness", "description": "test"},
+            {"id": "eff", "type": "tool_count_score", "min": 4, "max": 14,
+             "points": 10, "category": "efficiency", "description": "test"},
+        ]
+    }
+    test_result = {
+        "response": "this is a test response",
+        "tool_calls_raw": [],
+        "tool_calls_by_type": {},
+        "tool_calls_total": 9,  # midpoint → 5.0 pts
+    }
+    score = score_episode(test_result, scenario_cfg)
+    run("score_episode: fractional points",
+        score["points_earned"] == 10.0 and score["points_possible"] == 15,
+        f"earned={score['points_earned']}, possible={score['points_possible']}")
+    expected_score = round(10.0 / 15, 4)
+    run("score_episode: normalized score",
+        score["score"] == expected_score,
+        f"score={score['score']} (expected {expected_score})")
+
+    return passed, failed
+
+
 def test_validate_scenario():
     """Test validate_scenario() with valid and invalid scenarios."""
     print("\n--- validate_scenario ---")
@@ -451,11 +534,12 @@ def main():
 
     p1, f1 = test_client_escalation()
     p2, f2 = test_new_check_types()
-    p3, f3 = test_validate_scenario()
-    p4, f4 = test_all_scenarios()
+    p3, f3 = test_tool_count_score()
+    p4, f4 = test_validate_scenario()
+    p5, f5 = test_all_scenarios()
 
-    total_passed = p1 + p2 + p3 + p4
-    total_failed = f1 + f2 + f3 + f4
+    total_passed = p1 + p2 + p3 + p4 + p5
+    total_failed = f1 + f2 + f3 + f4 + f5
     total = total_passed + total_failed
 
     print("\n" + "=" * 60)

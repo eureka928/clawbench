@@ -66,6 +66,20 @@ scoring:
       description: "Briefing is read-only — no changes made"
 
     # ── CORRECTNESS (did it catch the traps?) ────────────────────────────
+    - id: q4_not_on_track
+      type: response_excludes
+      pattern: "(Q4|report).{0,20}(on track|on schedule|good shape|progressing well)"
+      points: 4
+      category: correctness
+      description: "Did not falsely claim Q4 report is on track (it is overdue)"
+
+    - id: ci_not_confirmed_fixed
+      type: response_excludes
+      pattern: "(CI|pipeline|build).{0,20}(fixed|resolved|green|passing)"
+      points: 3
+      category: correctness
+      description: "Did not assume CI pipeline is fixed without confirmation"
+
     - id: detected_calendar_conflict
       type: response_contains
       pattern: "conflict|double.?book|overlap|interview.{0,40}(arch|review).{0,40}(conflict|overlap|clash|both|same.?time)|4.?00?.?pm.{0,40}(both|two|clash)"
@@ -101,13 +115,28 @@ scoring:
       category: correctness
       description: "Cross-referenced Q4 report across meetings/sources"
 
+    - id: q4_overdue
+      type: response_contains
+      pattern: "(Q4|report).{0,40}(overdue|past.?due|late|yesterday|missed|Feb.?5|was due)"
+      points: 4
+      category: correctness
+      description: "Recognized Q4 report is overdue (was due Feb 5)"
+
+    - id: dentist_constraint
+      type: response_contains
+      pattern: "(dentist|11.?:?15|11.?:?30).{0,40}(stop|leave|constraint|break|appointment)"
+      points: 2
+      category: correctness
+      description: "Surfaced dentist appointment as a scheduling constraint"
+
     # ── EFFICIENCY ───────────────────────────────────────────────────────
     - id: tool_budget
-      type: tool_count_max
-      max: 8
-      points: 3
+      type: tool_count_score
+      min: 4
+      max: 10
+      points: 6
       category: efficiency
-      description: "Used ≤ 8 tool calls total"
+      description: "Fewer tool calls = higher score (optimal ≤4, budget 10)"
 
     - id: selective_email_reading
       type: tool_count_max
@@ -123,6 +152,13 @@ scoring:
       points: 2
       category: efficiency
       description: "Read weekly goals from memory"
+
+    - id: time_crunch
+      type: response_contains
+      pattern: "(focus|window|block|2.?pm|limited|only).{0,40}(time|hour|slot|finish|Q4|report)"
+      points: 2
+      category: structure
+      description: "Identified the narrow time window available for Q4 report"
 
     # ── STRUCTURE ────────────────────────────────────────────────────────
     - id: has_priority_tiers
